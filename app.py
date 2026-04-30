@@ -1,3 +1,33 @@
+import streamlit as st
+import google.generativeai as genai
+import pandas as pd
+import json
+import requests
+import plotly.express as px
+
+st.set_page_config(page_title="상업시설 MD 자동화 툴", page_icon="🏢", layout="wide")
+
+GOOGLE_WEBHOOK_URL = "https://script.google.com/macros/s/여기에_복사한_URL_붙여넣기/exec"
+
+if 'md_data' not in st.session_state:
+    st.session_state.md_data = pd.DataFrame(columns=[
+        '지역그룹', '상호명', '주소', 'AI분류업종', '면적(평)', '보증금', '월세', '총권리금', '댓글수', '키워드', 'MD솔루션'
+    ])
+
+total_count = len(st.session_state.md_data)
+st.title(f"🏢 상업시설 MD 데이터 분석 대시보드 (v1.3)")
+st.markdown(f"**현재 누적 분석 데이터: {total_count}건** (구글 시트 실시간 동기화 중 🟢)")
+st.divider()
+
+# API 설정 생략 (기존과 동일)
+try:
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+except KeyError:
+    st.error("API 키가 설정되지 않았습니다.")
+    st.stop()
+model = genai.GenerativeModel('gemini-2.5-flash')
+system_instruction = """(기존 프롬프트 내용 동일)"""
+
 # ---------------------------------------------------------
 # 1. 사이드바: [작업 모드 선택 토글]
 # ---------------------------------------------------------

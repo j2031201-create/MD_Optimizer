@@ -9,7 +9,7 @@ st.set_page_config(page_title="상업시설 MD 자동화 툴", page_icon="🏢",
 
 # ==========================================
 # 🚨 여기에 아까 복사한 구글 앱스 스크립트 웹앱 URL을 넣어주세요!
-GOOGLE_WEBHOOK_URL = "https://script.google.com/macros/s/여기에_복사한_URL_붙여넣기/exec"
+GOOGLE_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxi9Ze6vTDxoXkb4JKtmIWvmcu227fYXJ36HpbUPoQKozKAj5zsHCWpYBH4gBb9k6Xe/exec"
 # ==========================================
 
 # 누적 데이터를 저장할 세션 상태 초기화

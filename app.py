@@ -297,11 +297,10 @@ MD_RECOMMEND_PROMPT = """
 """
 
 # ─────────────────────────────────────────────
-# 유틸 함수 (따옴표 에러 수정 완료)
+# 유틸 함수 (마크다운 복사 잘림 버그 원천 차단)
 # ─────────────────────────────────────────────
 def safe_json(text: str) -> dict:
-    text = re.sub(r'
-```json|```', '', text).strip()
+    text = text.replace("```json", "").replace("```", "").strip()
     try:
         return json.loads(text)
     except Exception:

@@ -26,7 +26,7 @@ st.set_page_config(
 )
 
 # ─────────────────────────────────────────────
-# CSS
+# CSS (White Mode 전면 개편 & 사이드바 오류 수정)
 # ─────────────────────────────────────────────
 st.markdown("""
 <style>
@@ -34,12 +34,12 @@ st.markdown("""
 
 html, body, [class*="css"], .stApp {
     font-family: 'DM Sans', sans-serif !important;
-    background-color: #08080F !important;
-    color: #E8E5FF !important;
+    background-color: #F8F9FA !important; /* 깔끔한 연회색 배경 */
+    color: #1E293B !important; /* 진한 슬레이트 색상 */
 }
 
-/* Manage App 버튼 및 불필요 UI 숨김 */
-#MainMenu, footer, header,
+/* Manage App 버튼 및 불필요 UI 숨김 (header는 사이드바 토글을 위해 남겨둠) */
+#MainMenu, footer,
 [data-testid="manage-app-button"],
 .viewerBadge_container__r5tak,
 .styles_viewerBadge__CvC9N,
@@ -48,23 +48,23 @@ html, body, [class*="css"], .stApp {
 
 /* 사이드바 */
 [data-testid="stSidebar"] {
-    background: #0D0D1F !important;
-    border-right: 1px solid rgba(196,181,253,0.1) !important;
+    background: #FFFFFF !important;
+    border-right: 1px solid #E2E8F0 !important;
     min-width: 240px !important;
 }
-[data-testid="stSidebar"] * { color: #FFFFFF !important; }
+[data-testid="stSidebar"] * { color: #334155 !important; }
 [data-testid="stSidebar"] .stRadio > div { gap: 2px !important; }
 [data-testid="stSidebar"] .stRadio label {
     font-family: 'DM Sans', sans-serif !important;
     font-size: 14px !important;
     font-weight: 500 !important;
-    color: #FFFFFF !important;
+    color: #334155 !important;
     padding: 9px 14px !important;
     border-radius: 8px !important;
     transition: background 0.15s !important;
 }
 [data-testid="stSidebar"] .stRadio label:hover {
-    background: rgba(122,90,248,0.2) !important;
+    background: #F1F5F9 !important;
 }
 
 /* 메인 */
@@ -75,175 +75,143 @@ html, body, [class*="css"], .stApp {
 
 /* 히어로 */
 .hero-sub {
-    font-size: 11px; font-weight: 600; color: #7A6AB8;
+    font-size: 11px; font-weight: 600; color: #6366F1;
     letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;
 }
 .hero-header {
     font-family: 'DM Sans', sans-serif; font-size: 2.4rem; font-weight: 700;
-    letter-spacing: -0.02em; line-height: 1.1; color: #C4B5FD; margin-bottom: 0;
+    letter-spacing: -0.02em; line-height: 1.1; color: #0F172A; margin-bottom: 0;
 }
-.hero-header .md-word { font-weight: 400; }
+.hero-header .md-word { font-weight: 400; color: #4F46E5; }
 .hero-badge {
     display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(22,163,74,0.1); border: 1px solid rgba(22,163,74,0.3);
-    color: #4ADE80; font-size: 11px; font-weight: 600;
+    background: #DCFCE7; border: 1px solid #BBF7D0;
+    color: #16A34A; font-size: 11px; font-weight: 600;
     padding: 4px 12px; border-radius: 100px; letter-spacing: 0.05em;
 }
 
 /* KPI */
 .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin: 1.4rem 0; }
 .kpi-card {
-    background: #FFFFFF; border: 1px solid #EAE7F8; border-radius: 14px;
+    background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px;
     padding: 18px 20px; transition: border-color .2s, box-shadow .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
-.kpi-card:hover { border-color: #A78BFA; box-shadow: 0 4px 20px rgba(122,90,248,.1); }
-.kpi-label { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #8B87B0; margin-bottom: 8px; }
-.kpi-value { font-family: 'DM Sans',sans-serif; font-size: 1.9rem; font-weight: 700; color: #1A1730; line-height: 1; }
-.kpi-unit  { font-size: 13px; color: #A09DC8; margin-left: 3px; font-weight: 400; }
+.kpi-card:hover { border-color: #818CF8; box-shadow: 0 4px 20px rgba(99,102,241,.08); }
+.kpi-label { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #64748B; margin-bottom: 8px; }
+.kpi-value { font-family: 'DM Sans',sans-serif; font-size: 1.9rem; font-weight: 700; color: #0F172A; line-height: 1; }
+.kpi-unit  { font-size: 13px; color: #64748B; margin-left: 3px; font-weight: 400; }
 .kpi-delta { font-size: 11px; margin-top: 7px; color: #16A34A; font-weight: 500; }
 .kpi-delta.neg { color: #DC2626; }
 
 /* 섹션 타이틀 */
 .section-title {
-    font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600;
-    color: #E8E5FF; letter-spacing: 0; margin: 1.6rem 0 .7rem;
+    font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 700;
+    color: #0F172A; letter-spacing: 0; margin: 1.6rem 0 .7rem;
     display: flex; align-items: center; gap: 10px;
 }
-.section-title::after { content:''; flex:1; height:1px; background:rgba(196,181,253,.12); }
+.section-title::after { content:''; flex:1; height:1px; background: #E2E8F0; }
 
 /* 페이지 서브텍스트 */
-.page-sub { font-size: 13px; color: #9C98C8; margin-bottom: 1.4rem; font-weight: 400; }
+.page-sub { font-size: 13px; color: #64748B; margin-bottom: 1.4rem; font-weight: 400; }
 
 /* 흰 카드 */
-.white-card { background:#FFFFFF; border:1px solid #EAE7F8; border-radius:14px; padding:20px 22px; }
+.white-card { background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
 
 /* profit-card */
-.profit-card { background:#FFFFFF; border:1px solid #EAE7F8; border-radius:14px; padding:20px 22px; }
-.profit-title { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#7A5AF8; margin-bottom:14px; }
+.profit-card { background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+.profit-title { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#4F46E5; margin-bottom:14px; }
 .profit-row {
     display:flex; justify-content:space-between; align-items:center;
-    padding:7px 0; border-bottom:1px solid #F2F0FB;
-    font-size:13px; color:#5E5B88; font-weight:400;
+    padding:7px 0; border-bottom:1px solid #F1F5F9;
+    font-size:13px; color:#475569; font-weight:400;
 }
 .profit-row:last-child { border-bottom:none; }
-.profit-num { font-weight:600; color:#1A1730; font-family:'DM Sans',sans-serif; }
+.profit-num { font-weight:600; color:#0F172A; font-family:'DM Sans',sans-serif; }
 .profit-highlight { color:#16A34A !important; font-size:14px !important; font-weight:700 !important; }
 
 /* MD 카드 */
 .md-card {
-    background:#FFFFFF; border:1px solid #EAE7F8; border-radius:12px;
-    padding:16px 18px; margin-bottom:8px; transition:all .2s;
+    background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px;
+    padding:16px 18px; margin-bottom:8px; transition:all .2s; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
-.md-card:hover { border-color:#A78BFA; box-shadow:0 4px 16px rgba(122,90,248,.08); }
+.md-card:hover { border-color:#818CF8; box-shadow:0 4px 16px rgba(99,102,241,.08); }
 .md-card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
 .md-tag {
     font-size:10px; font-weight:700; letter-spacing:.07em; padding:3px 10px;
-    border-radius:100px; background:rgba(122,90,248,.08);
-    color:#6B5CE7; border:1px solid rgba(122,90,248,.18);
+    border-radius:100px; background:#EEF2FF;
+    color:#4F46E5; border:1px solid #C7D2FE;
 }
-.md-name { font-size:14px; font-weight:600; color:#1A1730; margin-bottom:4px; }
-.md-solution { font-size:12px; color:#5E5B88; line-height:1.65; border-top:1px solid #F2F0FB; padding-top:9px; margin-top:5px; }
+.md-name { font-size:14px; font-weight:700; color:#0F172A; margin-bottom:4px; }
+.md-solution { font-size:12px; color:#475569; line-height:1.65; border-top:1px solid #F1F5F9; padding-top:9px; margin-top:5px; }
 
 /* 입력 필드 */
 .stTextInput>div>div>input,
 .stTextArea>div>div>textarea,
 .stNumberInput>div>div>input {
-    background:#FFFFFF !important; border:1.5px solid #DDD9F5 !important;
-    border-radius:9px !important; color:#1A1730 !important;
+    background:#FFFFFF !important; border:1.5px solid #CBD5E1 !important;
+    border-radius:9px !important; color:#0F172A !important;
     font-family:'DM Sans',sans-serif !important; font-size:14px !important;
 }
 .stTextInput>div>div>input:focus,
 .stTextArea>div>div>textarea:focus,
 .stNumberInput>div>div>input:focus {
-    border-color:#7A5AF8 !important; box-shadow:0 0 0 3px rgba(122,90,248,.1) !important;
+    border-color:#4F46E5 !important; box-shadow:0 0 0 3px rgba(79,70,229,.1) !important;
 }
 .stTextInput label,.stTextArea label,.stNumberInput label,.stSlider label,.stSelectbox label {
-    color:#C4B5FD !important; font-size:11px !important; font-weight:600 !important;
+    color:#475569 !important; font-size:11px !important; font-weight:700 !important;
     letter-spacing:.08em !important; text-transform:uppercase !important;
     font-family:'DM Sans',sans-serif !important;
 }
 .stSelectbox [data-baseweb="select"]>div {
-    background:#FFFFFF !important; border-color:#DDD9F5 !important; border-radius:9px !important;
+    background:#FFFFFF !important; border-color:#CBD5E1 !important; border-radius:9px !important;
 }
-.stSelectbox [data-baseweb="select"] span { color:#1A1730 !important; }
-.stNumberInput button { background:#F5F2FF !important; border-color:#DDD9F5 !important; color:#1A1730 !important; }
+.stSelectbox [data-baseweb="select"] span { color:#0F172A !important; }
+.stNumberInput button { background:#F8F9FA !important; border-color:#CBD5E1 !important; color:#0F172A !important; }
 
 /* 버튼 */
 .stButton>button {
-    background:linear-gradient(135deg,#7A5AF8 0%,#6246E5 100%) !important;
+    background:linear-gradient(135deg,#6366F1 0%,#4F46E5 100%) !important;
     color:#FFFFFF !important; border:none !important; border-radius:9px !important;
     font-family:'DM Sans',sans-serif !important; font-size:14px !important;
     font-weight:600 !important; padding:10px 22px !important;
     transition:all .18s !important; letter-spacing:.01em !important;
 }
-.stButton>button:hover { transform:translateY(-1px) !important; box-shadow:0 8px 24px rgba(122,90,248,.4) !important; }
+.stButton>button:hover { transform:translateY(-1px) !important; box-shadow:0 8px 24px rgba(79,70,229,.3) !important; }
 
 /* 탭 */
-.stTabs [data-baseweb="tab-list"] { background:transparent !important; border-bottom:1px solid rgba(196,181,253,.1) !important; gap:0 !important; }
+.stTabs [data-baseweb="tab-list"] { background:transparent !important; border-bottom:1px solid #E2E8F0 !important; gap:0 !important; }
 .stTabs [data-baseweb="tab"] {
-    background:transparent !important; color:#7A6AB8 !important;
+    background:transparent !important; color:#64748B !important;
     font-family:'DM Sans',sans-serif !important; font-size:13px !important;
-    font-weight:500 !important; padding:9px 18px !important; border-bottom:2px solid transparent !important;
+    font-weight:600 !important; padding:9px 18px !important; border-bottom:2px solid transparent !important;
 }
-.stTabs [aria-selected="true"] { color:#C4B5FD !important; border-bottom-color:#7A5AF8 !important; }
+.stTabs [aria-selected="true"] { color:#4F46E5 !important; border-bottom-color:#4F46E5 !important; }
 
 /* 알림박스 */
-.stAlert { background:#111128 !important; border:1px solid rgba(196,181,253,.12) !important; border-radius:10px !important; color:#9C98C8 !important; }
+.stAlert { background:#F8FAFC !important; border:1px solid #E2E8F0 !important; border-radius:10px !important; color:#334155 !important; }
 
-hr { border-color:rgba(196,181,253,.08) !important; }
-.stSpinner>div { border-top-color:#7A5AF8 !important; }
-.stSlider>div>div>div { background:#7A5AF8 !important; }
+hr { border-color:#E2E8F0 !important; }
+.stSpinner>div { border-top-color:#4F46E5 !important; }
+.stSlider>div>div>div { background:#4F46E5 !important; }
 
 /* 사이드바 tagline */
-.sidebar-tagline { font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700; color:#FFFFFF; letter-spacing:.12em; text-transform:uppercase; }
+.sidebar-tagline { font-family:'DM Sans',sans-serif; font-size:12px; font-weight:800; color:#0F172A; letter-spacing:.12em; text-transform:uppercase; }
 
 /* 사이드바 업종 통계 */
 .sector-row {
     display:flex; justify-content:space-between; align-items:center;
-    padding:5px 0; border-bottom:1px solid rgba(255,255,255,.05);
-    font-size:12px; font-family:'DM Sans',sans-serif; color:#FFFFFF;
+    padding:5px 0; border-bottom:1px solid #F1F5F9;
+    font-size:12px; font-family:'DM Sans',sans-serif; color:#475569;
 }
 .sector-row:last-child { border-bottom:none; }
-.sector-cnt { font-weight:700; color:#C4B5FD; font-size:13px; }
-.sector-total { font-size:12px; font-weight:700; color:#7A5AF8; padding-top:6px; border-top:1px solid rgba(122,90,248,.3); margin-top:4px; font-family:'DM Sans',sans-serif; }
+.sector-cnt { font-weight:700; color:#64748B; font-size:13px; }
+.sector-total { font-size:12px; font-weight:700; color:#4F46E5; padding-top:6px; border-top:1px solid #C7D2FE; margin-top:4px; font-family:'DM Sans',sans-serif; }
 </style>
 """, unsafe_allow_html=True)
 
-# 사이드바 재열기 플로팅 버튼 (JS)
-st.markdown("""
-<script>
-(function(){
-  function init(){
-    if(document.getElementById('sb-reopen')) return;
-    var btn = document.createElement('button');
-    btn.id='sb-reopen';
-    btn.innerHTML='&#9654;';
-    btn.title='사이드바 열기';
-    Object.assign(btn.style,{
-      position:'fixed',left:'0',top:'50%',transform:'translateY(-50%)',
-      zIndex:'9999',background:'#7A5AF8',color:'#FFF',border:'none',
-      borderRadius:'0 8px 8px 0',padding:'14px 7px',cursor:'pointer',
-      fontSize:'13px',boxShadow:'2px 0 12px rgba(122,90,248,.45)',
-      display:'none',transition:'opacity .2s'
-    });
-    btn.onclick=function(){
-      var t=document.querySelector('[data-testid="collapsedControl"]')
-          ||document.querySelector('button[aria-label="Open sidebar"]');
-      if(t) t.click();
-    };
-    document.body.appendChild(btn);
-    new MutationObserver(function(){
-      var s=document.querySelector('[data-testid="stSidebar"]');
-      if(s){ var c=s.getAttribute('aria-expanded')==='false'; btn.style.display=c?'block':'none'; }
-    }).observe(document.body,{attributes:true,subtree:true,childList:true});
-  }
-  document.readyState==='complete'?init():window.addEventListener('load',init);
-})();
-</script>
-""", unsafe_allow_html=True)
-
 # ─────────────────────────────────────────────
-# 상수
+# 상수 및 설정
 # ─────────────────────────────────────────────
 SHEET_ID = "1Ct0zjXbdqoNzFTdp2P0VxS0SwgBPSqQHlldnQWWA-Os"
 SHEET_HEADERS = ["지역그룹","상호명","주소","AI분류업종","면적(평)","보증금","월세","총권리금","매물등록일","키워드","MD솔루션"]
@@ -252,7 +220,7 @@ COLS = ['지역그룹','상호명','주소','AI분류업종','면적_평','보�
         '권장임대료_만원','권장분양가_만원','예상수익률_pct','수집일시']
 
 # ─────────────────────────────────────────────
-# 구글 시트 연동
+# 구글 시트 연동 로직
 # ─────────────────────────────────────────────
 @st.cache_resource(ttl=300)
 def get_gsheet_ws():
@@ -315,7 +283,7 @@ if 'last_extracted' not in st.session_state:
     st.session_state.last_extracted = None
 
 # ─────────────────────────────────────────────
-# Gemini
+# Gemini 설정
 # ─────────────────────────────────────────────
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
@@ -356,10 +324,11 @@ MD_RECOMMEND_PROMPT = """
 """
 
 # ─────────────────────────────────────────────
-# 유틸
+# 유틸 함수
 # ─────────────────────────────────────────────
 def safe_json(text: str) -> dict:
-    text = re.sub(r'```json|```', '', text).strip()
+    text = re.sub(r'
+```json|```', '', text).strip()
     try:
         return json.loads(text)
     except Exception:
@@ -380,26 +349,27 @@ def calc_profit(rent, area, price):
     return {"수익률": round(annual / price * 100, 2),
             "회수기간": round(price / annual, 1) if annual else 0}
 
+# 차트 레이아웃 화이트톤으로 수정
 CHART_LAYOUT = dict(
     paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-    font=dict(color='#9C98C8', size=11, family='DM Sans'),
-    title_font=dict(color='#E8E5FF', size=13, family='DM Sans'),
+    font=dict(color='#64748B', size=11, family='DM Sans'),
+    title_font=dict(color='#0F172A', size=13, family='DM Sans'),
     margin=dict(l=0, r=0, t=36, b=0),
-    xaxis=dict(gridcolor='rgba(196,181,253,0.07)', tickfont=dict(color='#7A6AB8', family='DM Sans')),
-    yaxis=dict(gridcolor='rgba(196,181,253,0.07)', tickfont=dict(color='#7A6AB8', family='DM Sans')),
+    xaxis=dict(gridcolor='rgba(0,0,0,0.05)', tickfont=dict(color='#64748B', family='DM Sans')),
+    yaxis=dict(gridcolor='rgba(0,0,0,0.05)', tickfont=dict(color='#64748B', family='DM Sans')),
 )
-PALETTE = ["#7A5AF8","#A78BFA","#C4B5FD","#DDD6FE","#EDE9FE"]
+PALETTE = ["#4F46E5","#818CF8","#C7D2FE","#A78BFA","#DDD6FE"]
 
 def loading_html(msg="AI 분석 중...", sub="잠시만 기다려 주세요"):
     return f"""
-    <div style='background:#111128;border:1px solid rgba(196,181,253,.12);border-radius:14px;
+    <div style='background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;
                 padding:60px 40px;text-align:center;min-height:300px;
                 display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;'>
-        <div style='width:46px;height:46px;border:3px solid rgba(196,181,253,.15);
-                    border-top-color:#7A5AF8;border-radius:50%;
+        <div style='width:46px;height:46px;border:3px solid #EEF2FF;
+                    border-top-color:#4F46E5;border-radius:50%;
                     animation:spin .75s linear infinite;margin:0 auto;'></div>
-        <div style='font-family:DM Sans,sans-serif;font-size:15px;font-weight:600;color:#C4B5FD;'>{msg}</div>
-        <div style='font-size:12px;color:#5E5B88;font-family:DM Sans,sans-serif;'>{sub}</div>
+        <div style='font-family:DM Sans,sans-serif;font-size:15px;font-weight:700;color:#0F172A;'>{msg}</div>
+        <div style='font-size:12px;color:#64748B;font-family:DM Sans,sans-serif;'>{sub}</div>
     </div>
     <style>@keyframes spin{{to{{transform:rotate(360deg);}}}}</style>
     """
@@ -422,10 +392,10 @@ with st.sidebar:
 
     df_all = st.session_state.md_data
     total  = len(df_all)
-    st.markdown("<div style='font-size:10px;color:#7A6AB8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:DM Sans,sans-serif;'>누적 데이터</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-size:10px;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:DM Sans,sans-serif;'>누적 데이터</div>", unsafe_allow_html=True)
 
     if total == 0:
-        st.markdown("<div style='font-size:1.6rem;font-weight:700;color:#FFFFFF;font-family:DM Sans,sans-serif;'>0<span style='font-size:12px;color:#7A6AB8;margin-left:4px;'>건</span></div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:1.6rem;font-weight:800;color:#0F172A;font-family:DM Sans,sans-serif;'>0<span style='font-size:12px;color:#64748B;margin-left:4px;'>건</span></div>", unsafe_allow_html=True)
     else:
         if 'AI분류업종' in df_all.columns:
             sc = df_all['AI분류업종'].dropna().value_counts()
@@ -435,9 +405,9 @@ with st.sidebar:
 
     st.markdown("<br>", unsafe_allow_html=True)
     gs_live = get_gsheet_ws() is not None
-    dot_c   = "#4ADE80" if gs_live else "#F87171"
+    dot_c   = "#16A34A" if gs_live else "#DC2626"
     dot_t   = "시트 연결됨" if gs_live else "로컬 모드"
-    st.markdown(f"<div style='display:flex;align-items:center;gap:7px;font-size:11px;color:#7A6AB8;font-family:DM Sans,sans-serif;'><span style='width:7px;height:7px;border-radius:50%;background:{dot_c};display:inline-block;'></span>{dot_t}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#475569;font-family:DM Sans,sans-serif;'><span style='width:8px;height:8px;border-radius:50%;background:{dot_c};display:inline-block;'></span>{dot_t}</div>", unsafe_allow_html=True)
 
 
 # ═══════════════════════════════════════════════════════
@@ -487,7 +457,7 @@ if not df_all.empty:
       </div>
       <div class="kpi-card">
         <div class="kpi-label">주요 업종</div>
-        <div class="kpi-value" style="font-size:1.2rem;">{top_sec}</div>
+        <div class="kpi-value" style="font-size:1.4rem;">{top_sec}</div>
         <div class="kpi-delta">최다 수집 업종</div>
       </div>
     </div>
@@ -529,23 +499,23 @@ if "데이터 수집" in app_mode:
                   <div class="profit-row"><span>권리금</span><span class="profit-num">{fmt(d.get('총권리금_만원'))}만원</span></div>
                   <div class="profit-row"><span>권장 분양가</span><span class="profit-num">{fmt(d.get('권장분양가_만원'))}만원</span></div>
                   <div class="profit-row">
-                    <span style="font-weight:600;color:#1A1730;">예상 수익률</span>
+                    <span style="font-weight:700;color:#0F172A;">예상 수익률</span>
                     <span class="profit-highlight" style="color:{yc};">{pr.get('수익률','—')}%</span>
                   </div>
                 </div>
                 <div class="md-card" style="margin-top:10px;">
                   <div class="md-name">AI MD 솔루션</div>
                   <div class="md-solution">{d.get('MD솔루션','—')}</div>
-                  <div style="margin-top:8px;font-size:11px;color:#8B87B0;font-family:DM Sans,sans-serif;">키워드: {d.get('키워드','—')}</div>
+                  <div style="margin-top:8px;font-size:11px;color:#64748B;font-family:DM Sans,sans-serif;font-weight:600;">키워드: {d.get('키워드','—')}</div>
                 </div>
                 """, unsafe_allow_html=True)
             else:
                 result_ph.markdown("""
-                <div style='background:#FFFFFF;border:1.5px dashed #DDD9F5;border-radius:14px;
+                <div style='background:#FFFFFF;border:1.5px dashed #CBD5E1;border-radius:14px;
                             padding:40px;text-align:center;min-height:300px;
                             display:flex;flex-direction:column;align-items:center;justify-content:center;'>
-                  <div style='font-size:28px;margin-bottom:12px;color:#C4B5FD;opacity:.5;'>◈</div>
-                  <div style='font-size:13px;color:#8B87B0;font-family:DM Sans,sans-serif;'>
+                  <div style='font-size:28px;margin-bottom:12px;color:#94A3B8;opacity:.5;'>◈</div>
+                  <div style='font-size:13px;color:#64748B;font-family:DM Sans,sans-serif;'>
                     좌측에 매물 텍스트를 입력하면<br>AI 분석 결과가 여기에 표시됩니다.
                   </div>
                 </div>
@@ -638,9 +608,9 @@ elif "MD 추천" in app_mode:
                 grp = df_y.groupby('AI분류업종')['예상수익률_pct'].mean().reset_index()
                 fig3 = px.bar(grp, x='AI분류업종', y='예상수익률_pct', title='업종별 평균 수익률',
                               color='예상수익률_pct',
-                              color_continuous_scale=[[0,'#3B1F9E'],[.5,'#7A5AF8'],[1,'#C4B5FD']])
-                fig3.add_hline(y=4.5, line_dash="dot", line_color="#4ADE80",
-                               annotation_text="목표 4.5%", annotation_font_color="#4ADE80")
+                              color_continuous_scale=[[0,'#818CF8'],[.5,'#4F46E5'],[1,'#312E81']])
+                fig3.add_hline(y=4.5, line_dash="dot", line_color="#16A34A",
+                               annotation_text="목표 4.5%", annotation_font_color="#16A34A")
                 fig3.update_layout(**CHART_LAYOUT, showlegend=False, coloraxis_showscale=False)
                 st.plotly_chart(fig3, use_container_width=True)
             with cd:
@@ -648,9 +618,9 @@ elif "MD 추천" in app_mode:
                 if not df_p.empty:
                     fig4 = px.scatter(df_p, x='권장분양가_만원', y='예상수익률_pct',
                                       text='상호명', title='분양가 vs 수익률', color='예상수익률_pct',
-                                      color_continuous_scale=[[0,'#DC2626'],[.5,'#FBBF24'],[1,'#16A34A']])
-                    fig4.add_hline(y=4.5, line_dash="dot", line_color="#4ADE80")
-                    fig4.update_traces(textposition='top center', textfont=dict(size=9, color='#7A6AB8', family='DM Sans'))
+                                      color_continuous_scale=[[0,'#DC2626'],[.5,'#F59E0B'],[1,'#16A34A']])
+                    fig4.add_hline(y=4.5, line_dash="dot", line_color="#16A34A")
+                    fig4.update_traces(textposition='top center', textfont=dict(size=9, color='#475569', family='DM Sans'))
                     fig4.update_layout(**CHART_LAYOUT, coloraxis_showscale=False)
                     st.plotly_chart(fig4, use_container_width=True)
         else:
@@ -677,20 +647,20 @@ elif "MD 추천" in app_mode:
             ai_ph.empty()
             if rec:
                 st.markdown('<div class="section-title">AI MD 분석 결과</div>', unsafe_allow_html=True)
-                gc = {"A":"#16A34A","B":"#7A5AF8","C":"#FBBF24","D":"#DC2626"}.get(rec.get("상권등급","C"), "#7A6AB8")
+                gc = {"A":"#16A34A","B":"#4F46E5","C":"#F59E0B","D":"#DC2626"}.get(rec.get("상권등급","C"), "#64748B")
                 cg1, cg2 = st.columns([1, 3])
                 with cg1:
                     st.markdown(f"""
                     <div class="white-card" style="text-align:center;padding:28px;">
                       <div style='font-family:DM Sans,sans-serif;font-size:3.2rem;font-weight:800;color:{gc};'>{rec.get('상권등급','—')}</div>
-                      <div style='font-size:10px;color:#8B87B0;margin-top:6px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-family:DM Sans,sans-serif;'>상권 등급</div>
+                      <div style='font-size:11px;color:#64748B;margin-top:6px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-family:DM Sans,sans-serif;'>상권 등급</div>
                     </div>
                     """, unsafe_allow_html=True)
                 with cg2:
                     st.markdown(f"""
                     <div class="profit-card">
                       <div class="profit-title">등급 분석</div>
-                      <p style='font-size:13px;color:#5E5B88;margin-bottom:12px;font-family:DM Sans,sans-serif;'>{rec.get('등급이유','—')}</p>
+                      <p style='font-size:13px;color:#475569;margin-bottom:12px;font-family:DM Sans,sans-serif;'>{rec.get('등급이유','—')}</p>
                       <div class="profit-row"><span>기회</span><span class="profit-num" style="color:#16A34A;">{rec.get('기회','—')}</span></div>
                       <div class="profit-row"><span>리스크</span><span class="profit-num" style="color:#DC2626;">{rec.get('리스크','—')}</span></div>
                     </div>
@@ -706,7 +676,7 @@ elif "MD 추천" in app_mode:
                             <div class="md-card">
                               <div class="md-card-header">
                                 <div class="md-tag">{['1순위','2순위','3순위'][i-1]}</div>
-                                <div style='font-size:12px;color:#16A34A;font-weight:600;font-family:DM Sans,sans-serif;'>{fmt(m.get('권장임대료'))}만원</div>
+                                <div style='font-size:12px;color:#16A34A;font-weight:700;font-family:DM Sans,sans-serif;'>{fmt(m.get('권장임대료'))}만원</div>
                               </div>
                               <div class="md-name">{m.get('업종','—')}</div>
                               <div class="md-solution">{m.get('이유','—')}</div>
@@ -747,8 +717,8 @@ elif "수익성 계산기" in app_mode:
           <div class="profit-row"><span>연간 임대수익</span><span class="profit-num">{annual:,}만원</span></div>
           <div class="profit-row"><span>보증금 운용수익 (연 2%)</span><span class="profit-num">{dep_y:,}만원</span></div>
           <div class="profit-row"><span>총 연간 수익</span><span class="profit-num">{annual + dep_y:,}만원</span></div>
-          <div class="profit-row" style="padding-top:10px;margin-top:4px;border-top:2px solid #EAE7F8;">
-            <span style="font-weight:700;color:#1A1730;font-size:14px;font-family:DM Sans,sans-serif;">권장 분양가</span>
+          <div class="profit-row" style="padding-top:10px;margin-top:4px;border-top:2px solid #E2E8F0;">
+            <span style="font-weight:800;color:#0F172A;font-size:14px;font-family:DM Sans,sans-serif;">권장 분양가</span>
             <span class="profit-highlight">{rec_p:,}만원</span>
           </div>
           <div class="profit-row"><span>권리금 포함 총 투자금</span><span class="profit-num">{rec_p + premium:,}만원</span></div>
@@ -757,16 +727,16 @@ elif "수익성 계산기" in app_mode:
         """, unsafe_allow_html=True)
 
         gauge_val = min(target_yield / 10, 1.0)
-        g_color   = "#16A34A" if target_yield >= 4.5 else "#FBBF24" if target_yield >= 3.0 else "#DC2626"
+        g_color   = "#16A34A" if target_yield >= 4.5 else "#F59E0B" if target_yield >= 3.0 else "#DC2626"
         st.markdown(f"""
         <div class="white-card" style="text-align:center;margin-top:12px;">
-          <div style='font-size:10px;font-weight:700;color:#8B87B0;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;font-family:DM Sans,sans-serif;'>목표 수익률</div>
+          <div style='font-size:11px;font-weight:700;color:#64748B;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;font-family:DM Sans,sans-serif;'>목표 수익률</div>
           <div style='font-family:DM Sans,sans-serif;font-size:2.8rem;font-weight:800;color:{g_color};'>{target_yield:.1f}%</div>
-          <div style='background:#F2F0FB;border-radius:6px;height:5px;margin-top:14px;'>
-            <div style='background:{g_color};width:{int(gauge_val*100)}%;height:5px;border-radius:6px;transition:width .3s;'></div>
+          <div style='background:#F1F5F9;border-radius:6px;height:6px;margin-top:14px;'>
+            <div style='background:{g_color};width:{int(gauge_val*100)}%;height:6px;border-radius:6px;transition:width .3s;'></div>
           </div>
-          <div style='display:flex;justify-content:space-between;font-size:10px;color:#8B87B0;margin-top:5px;font-family:DM Sans,sans-serif;'>
-            <span>0%</span><span style="color:#7A5AF8;font-weight:700;">목표 4.5%</span><span>10%</span>
+          <div style='display:flex;justify-content:space-between;font-size:11px;color:#64748B;font-weight:600;margin-top:5px;font-family:DM Sans,sans-serif;'>
+            <span>0%</span><span style="color:#4F46E5;font-weight:800;">목표 4.5%</span><span>10%</span>
           </div>
         </div>
         """, unsafe_allow_html=True)
@@ -776,9 +746,9 @@ elif "수익성 계산기" in app_mode:
     prices = [int(annual / (y / 100)) for y in yields]
     fig_s  = go.Figure(go.Bar(
         x=[f"{y}%" for y in yields], y=prices,
-        marker_color=["#DC2626" if y < 4.5 else "#7A5AF8" for y in yields],
+        marker_color=["#DC2626" if y < 4.5 else "#4F46E5" for y in yields],
         text=[f"{p:,}만" for p in prices], textposition='outside',
-        textfont=dict(color='#9C98C8', size=11, family='DM Sans')
+        textfont=dict(color='#475569', size=11, family='DM Sans', weight='bold')
     ))
     fig_s.update_layout(
         title="수익률별 권장 분양가",

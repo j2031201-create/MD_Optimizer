@@ -327,8 +327,7 @@ MD_RECOMMEND_PROMPT = """
 # 유틸 함수
 # ─────────────────────────────────────────────
 def safe_json(text: str) -> dict:
-    text = re.sub(r'
-```json|```', '', text).strip()
+    text = re.sub(r'```json|```', '', text).strip()
     try:
         return json.loads(text)
     except Exception:

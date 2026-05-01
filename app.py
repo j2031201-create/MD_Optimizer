@@ -35,20 +35,21 @@ html, body, [class*="css"] {
 /* ── 사이드바 ── */
 [data-testid="stSidebar"] {
     background: #0F0F1A !important;
-    border-right: 1px solid rgba(255,255,255,0.06) !important;
+    border-right: 1px solid rgba(255,255,255,0.08) !important;
 }
+[data-testid="stSidebar"] * { color: #FFFFFF !important; }
 [data-testid="stSidebar"] .stRadio label {
     font-family: 'DM Sans', sans-serif !important;
     font-size: 14px !important;
-    color: #C4C0E8 !important;
+    color: #FFFFFF !important;
     padding: 10px 14px !important;
     border-radius: 10px !important;
     margin: 2px 0 !important;
     transition: all 0.2s ease !important;
 }
 [data-testid="stSidebar"] .stRadio label:hover {
-    background: rgba(122, 90, 248, 0.12) !important;
-    color: #EDE9FF !important;
+    background: rgba(122, 90, 248, 0.18) !important;
+    color: #FFFFFF !important;
 }
 
 /* ── 메인 영역 ── */
@@ -61,17 +62,21 @@ html, body, [class*="css"] {
 .hero-header {
     font-family: 'Syne', sans-serif;
     font-size: 2.6rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
+    font-weight: 600;
+    letter-spacing: -0.02em;
     line-height: 1.1;
     color: #C4B5FD;
     margin-bottom: 0.25rem;
 }
+.hero-header .md-word {
+    font-weight: 400;
+    letter-spacing: 0.01em;
+}
 .hero-sub {
-    font-size: 14px;
+    font-size: 13px;
     color: #9C98C8;
-    font-weight: 300;
-    letter-spacing: 0.08em;
+    font-weight: 400;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     margin-bottom: 0.1rem;
 }
@@ -217,28 +222,42 @@ html, body, [class*="css"] {
 .profit-num { font-weight: 600; color: #1A1730; font-family: 'Syne', sans-serif; }
 .profit-highlight { color: #16A34A !important; font-size: 15px !important; }
 
-/* ── 입력 필드 ── */
+/* ── 입력 필드 (흰 배경 + 검은 글씨) ── */
 .stTextInput > div > div > input,
 .stTextArea > div > div > textarea,
-.stSelectbox > div > div > div {
-    background: #13131F !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
+.stSelectbox > div > div > div,
+.stNumberInput > div > div > input {
+    background: #FFFFFF !important;
+    border: 1.5px solid #E0DCF0 !important;
     border-radius: 10px !important;
-    color: #E8E6F0 !important;
+    color: #1A1730 !important;
     font-family: 'DM Sans', sans-serif !important;
+    font-size: 15px !important;
 }
 .stTextInput > div > div > input:focus,
-.stTextArea > div > div > textarea:focus {
-    border-color: rgba(122,90,248,0.5) !important;
-    box-shadow: 0 0 0 3px rgba(122,90,248,0.1) !important;
+.stTextArea > div > div > textarea:focus,
+.stNumberInput > div > div > input:focus {
+    border-color: #7A5AF8 !important;
+    box-shadow: 0 0 0 3px rgba(122,90,248,0.12) !important;
 }
-.stTextInput label, .stTextArea label, .stSelectbox label {
-    color: #9C98C8 !important;
+.stTextInput label, .stTextArea label, .stSelectbox label,
+.stNumberInput label, .stSlider label {
+    color: #C4B5FD !important;
     font-size: 12px !important;
-    font-weight: 500 !important;
-    letter-spacing: 0.06em !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.07em !important;
     text-transform: uppercase !important;
 }
+/* 숫자 입력 +/- 버튼 */
+.stNumberInput button {
+    background: #F5F3FF !important;
+    border: 1px solid #E0DCF0 !important;
+    color: #1A1730 !important;
+    border-radius: 8px !important;
+}
+/* selectbox 텍스트 */
+.stSelectbox [data-baseweb="select"] * { color: #1A1730 !important; }
+.stSelectbox [data-baseweb="select"] > div { background: #FFFFFF !important; border-color: #E0DCF0 !important; }
 
 /* ── 버튼 ── */
 .stButton > button {
@@ -308,7 +327,7 @@ hr { border-color: rgba(255,255,255,0.05) !important; }
 .stSpinner > div { border-top-color: #7A5AF8 !important; }
 
 /* ── 사이드바 로고 ── */
-.sidebar-tagline { font-size: 12px; color: #8885B0; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+.sidebar-tagline { font-size: 12px; color: #FFFFFF; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
 
 /* ── 슬라이더 ── */
 .stSlider > div > div > div { background: #7A5AF8 !important; }
@@ -484,7 +503,7 @@ with st.sidebar:
 col_h1, col_h2 = st.columns([3, 1])
 with col_h1:
     st.markdown('<div class="hero-sub">Commercial Real Estate Intelligence</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-header">상업시설 MD 최적화 플랫폼</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-header">상업시설 <span class="md-word">MD</span> 최적화 플랫폼</div>', unsafe_allow_html=True)
 with col_h2:
     st.markdown("<br><br>", unsafe_allow_html=True)
     sync_status = "🟢 구글시트 동기화" if (GOOGLE_WEBHOOK_URL and "여기에" not in GOOGLE_WEBHOOK_URL) else "⚪ 로컬 모드"

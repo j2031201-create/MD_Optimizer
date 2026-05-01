@@ -40,7 +40,7 @@ html, body, [class*="css"] {
 [data-testid="stSidebar"] .stRadio label {
     font-family: 'DM Sans', sans-serif !important;
     font-size: 14px !important;
-    color: #A09EC0 !important;
+    color: #C4C0E8 !important;
     padding: 10px 14px !important;
     border-radius: 10px !important;
     margin: 2px 0 !important;
@@ -48,7 +48,7 @@ html, body, [class*="css"] {
 }
 [data-testid="stSidebar"] .stRadio label:hover {
     background: rgba(122, 90, 248, 0.12) !important;
-    color: #D4CCFF !important;
+    color: #EDE9FF !important;
 }
 
 /* ── 메인 영역 ── */
@@ -64,15 +64,12 @@ html, body, [class*="css"] {
     font-weight: 800;
     letter-spacing: -0.03em;
     line-height: 1.1;
-    background: linear-gradient(135deg, #FFFFFF 0%, #9D8FFF 60%, #6B5CE7 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #C4B5FD;
     margin-bottom: 0.25rem;
 }
 .hero-sub {
     font-size: 14px;
-    color: #5E5A80;
+    color: #9C98C8;
     font-weight: 300;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -100,38 +97,38 @@ html, body, [class*="css"] {
     margin: 1.5rem 0;
 }
 .kpi-card {
-    background: #13131F;
-    border: 1px solid rgba(255,255,255,0.07);
+    background: #FFFFFF;
+    border: 1px solid #E8E5F0;
     border-radius: 16px;
     padding: 20px 22px;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
-.kpi-card:hover { border-color: rgba(122,90,248,0.35); }
+.kpi-card:hover { border-color: #A78BFA; box-shadow: 0 4px 16px rgba(122,90,248,0.1); }
 .kpi-label {
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #4A4870;
+    color: #7C7A9A;
     margin-bottom: 8px;
 }
 .kpi-value {
     font-family: 'Syne', sans-serif;
     font-size: 2rem;
     font-weight: 700;
-    color: #FFFFFF;
+    color: #1A1730;
     line-height: 1;
 }
-.kpi-unit { font-size: 14px; color: #6B68A0; margin-left: 4px; }
-.kpi-delta { font-size: 12px; margin-top: 8px; color: #4ADE80; }
-.kpi-delta.neg { color: #F87171; }
+.kpi-unit { font-size: 14px; color: #9C98C8; margin-left: 4px; }
+.kpi-delta { font-size: 12px; margin-top: 8px; color: #22C55E; }
+.kpi-delta.neg { color: #EF4444; }
 
 /* ── 섹션 타이틀 ── */
 .section-title {
     font-family: 'Syne', sans-serif;
     font-size: 1.1rem;
     font-weight: 600;
-    color: #FFFFFF;
+    color: #E8E5FF;
     letter-spacing: -0.01em;
     margin: 1.8rem 0 0.8rem;
     display: flex;
@@ -142,21 +139,21 @@ html, body, [class*="css"] {
     content: '';
     flex: 1;
     height: 1px;
-    background: rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.1);
 }
 
 /* ── MD 추천 카드 ── */
 .md-card {
-    background: #13131F;
-    border: 1px solid rgba(255,255,255,0.07);
+    background: #FFFFFF;
+    border: 1px solid #E8E5F0;
     border-radius: 14px;
     padding: 18px 20px;
     margin-bottom: 10px;
     transition: all 0.2s;
 }
 .md-card:hover {
-    border-color: rgba(122,90,248,0.3);
-    background: #17172A;
+    border-color: #A78BFA;
+    box-shadow: 0 4px 16px rgba(122,90,248,0.1);
 }
 .md-card-header {
     display: flex;
@@ -170,31 +167,31 @@ html, body, [class*="css"] {
     letter-spacing: 0.06em;
     padding: 3px 10px;
     border-radius: 100px;
-    background: rgba(122,90,248,0.15);
-    color: #A58EFF;
-    border: 1px solid rgba(122,90,248,0.25);
+    background: rgba(122,90,248,0.1);
+    color: #6B5CE7;
+    border: 1px solid rgba(122,90,248,0.2);
 }
 .md-name {
     font-family: 'Syne', sans-serif;
     font-size: 15px;
     font-weight: 600;
-    color: #E8E6FF;
+    color: #1A1730;
     margin-bottom: 4px;
 }
-.md-meta { font-size: 12px; color: #4A4870; }
+.md-meta { font-size: 12px; color: #7C7A9A; }
 .md-solution {
     font-size: 13px;
-    color: #8885B0;
+    color: #4A4870;
     line-height: 1.6;
-    border-top: 1px solid rgba(255,255,255,0.05);
+    border-top: 1px solid #F0EDF8;
     padding-top: 10px;
     margin-top: 6px;
 }
 
 /* ── 수익성 분석 카드 ── */
 .profit-card {
-    background: linear-gradient(135deg, #13131F 0%, #1A1330 100%);
-    border: 1px solid rgba(122,90,248,0.2);
+    background: #FFFFFF;
+    border: 1px solid #E8E5F0;
     border-radius: 16px;
     padding: 22px 24px;
 }
@@ -212,13 +209,13 @@ html, body, [class*="css"] {
     justify-content: space-between;
     align-items: center;
     padding: 8px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid #F0EDF8;
     font-size: 13px;
-    color: #6B68A0;
+    color: #4A4870;
 }
 .profit-row:last-child { border-bottom: none; }
-.profit-num { font-weight: 600; color: #C4C0FF; font-family: 'Syne', sans-serif; }
-.profit-highlight { color: #4ADE80 !important; font-size: 15px !important; }
+.profit-num { font-weight: 600; color: #1A1730; font-family: 'Syne', sans-serif; }
+.profit-highlight { color: #16A34A !important; font-size: 15px !important; }
 
 /* ── 입력 필드 ── */
 .stTextInput > div > div > input,
@@ -236,7 +233,7 @@ html, body, [class*="css"] {
     box-shadow: 0 0 0 3px rgba(122,90,248,0.1) !important;
 }
 .stTextInput label, .stTextArea label, .stSelectbox label {
-    color: #4A4870 !important;
+    color: #9C98C8 !important;
     font-size: 12px !important;
     font-weight: 500 !important;
     letter-spacing: 0.06em !important;
@@ -295,7 +292,7 @@ hr { border-color: rgba(255,255,255,0.05) !important; }
 }
 .stTabs [data-baseweb="tab"] {
     background: transparent !important;
-    color: #4A4870 !important;
+    color: #9C98C8 !important;
     font-family: 'DM Sans', sans-serif !important;
     font-size: 13px !important;
     font-weight: 500 !important;
@@ -311,15 +308,7 @@ hr { border-color: rgba(255,255,255,0.05) !important; }
 .stSpinner > div { border-top-color: #7A5AF8 !important; }
 
 /* ── 사이드바 로고 ── */
-.sidebar-logo {
-    font-family: 'Syne', sans-serif;
-    font-size: 18px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: #FFFFFF;
-    margin-bottom: 4px;
-}
-.sidebar-tagline { font-size: 11px; color: #3A3860; letter-spacing: 0.08em; text-transform: uppercase; }
+.sidebar-tagline { font-size: 12px; color: #8885B0; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
 
 /* ── 슬라이더 ── */
 .stSlider > div > div > div { background: #7A5AF8 !important; }
@@ -455,7 +444,6 @@ def calc_profitability(monthly_rent, area, purchase_price):
 # 사이드바
 # ─────────────────────────────────────────────
 with st.sidebar:
-    st.markdown('<div class="sidebar-logo">◈ KT Estate</div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-tagline">MD Optimizer · v2.0</div>', unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -469,8 +457,8 @@ with st.sidebar:
     st.markdown("---")
     total = len(st.session_state.md_data)
     st.markdown(f"""
-    <div style='font-size:11px; color:#3A3860; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;'>누적 데이터</div>
-    <div style='font-family:Syne,sans-serif; font-size:2rem; font-weight:700; color:#FFFFFF;'>{total}<span style='font-size:14px; color:#4A4870; margin-left:4px;'>건</span></div>
+    <div style='font-size:11px; color:#9C98C8; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;'>누적 데이터</div>
+    <div style='font-family:Syne,sans-serif; font-size:2rem; font-weight:700; color:#FFFFFF;'>{total}<span style='font-size:14px; color:#B0ADCC; margin-left:4px;'>건</span></div>
     """, unsafe_allow_html=True)
 
     if total > 0:
@@ -479,9 +467,9 @@ with st.sidebar:
         for region, cnt in regions.items():
             pct = int(cnt / total * 100)
             st.markdown(f"""
-            <div style='display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px; color:#4A4870;'>
+            <div style='display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px; color:#B0ADCC;'>
                 <span>{region}</span>
-                <span style='color:#6B68A0;'>{cnt}건</span>
+                <span style='color:#C4C0E8;'>{cnt}건</span>
             </div>
             <div style='background:#1A1A2E; border-radius:4px; height:3px; margin-bottom:8px;'>
                 <div style='background:#7A5AF8; width:{pct}%; height:3px; border-radius:4px;'></div>
@@ -543,7 +531,7 @@ if not df_all.empty:
 # ═══════════════════════════════════════════════════════
 if "데이터 수집" in app_mode:
     st.markdown('<div class="section-title">신규 매물 데이터 수집</div>', unsafe_allow_html=True)
-    st.markdown('<p style="font-size:13px; color:#4A4870; margin-bottom:1.5rem;">매물 텍스트를 붙여넣으면 AI가 핵심 데이터를 자동 추출하고 수익성을 분석합니다.</p>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size:13px; color:#9C98C8; margin-bottom:1.5rem;">매물 텍스트를 붙여넣으면 AI가 핵심 데이터를 자동 추출하고 수익성을 분석합니다.</p>', unsafe_allow_html=True)
 
     col_left, col_right = st.columns([1, 1], gap="large")
 
@@ -606,11 +594,11 @@ if "데이터 수집" in app_mode:
             """, unsafe_allow_html=True)
         else:
             st.markdown("""
-            <div style='background:#13131F; border:1px dashed rgba(255,255,255,0.1); border-radius:14px;
+            <div style='background:#FFFFFF; border:1.5px dashed #D4CFEF; border-radius:14px;
                         padding:40px; text-align:center; height:340px; display:flex; flex-direction:column;
                         align-items:center; justify-content:center;'>
-                <div style='font-size:32px; margin-bottom:12px; opacity:0.3;'>◈</div>
-                <div style='font-size:13px; color:#3A3860;'>좌측에 매물 텍스트를 입력하면<br>AI 분석 결과가 여기에 표시됩니다.</div>
+                <div style='font-size:32px; margin-bottom:12px; opacity:0.25; color:#7A5AF8;'>◈</div>
+                <div style='font-size:13px; color:#7C7A9A;'>좌측에 매물 텍스트를 입력하면<br>AI 분석 결과가 여기에 표시됩니다.</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -674,7 +662,7 @@ elif "상권 분석" in app_mode:
     if sel_sector != "전체":
         df = df[df['AI분류업종'] == sel_sector]
 
-    st.markdown(f'<p style="font-size:12px; color:#3A3860; margin:0.5rem 0 1rem;">{len(df)}건 조회</p>', unsafe_allow_html=True)
+    st.markdown(f'<p style="font-size:12px; color:#9C98C8; margin:0.5rem 0 1rem;">{len(df)}건 조회</p>', unsafe_allow_html=True)
 
     # 차트
     tab1, tab2, tab3 = st.tabs(["📈  임대료 분포", "💡  수익률 분석", "📋  전체 데이터"])
@@ -810,9 +798,9 @@ elif "상권 분석" in app_mode:
                         st.markdown(f"""
                         <div class='profit-card'>
                             <div class='profit-title'>등급 분석</div>
-                            <p style='font-size:13px; color:#8885B0; margin-bottom:12px;'>{rec.get('등급이유','—')}</p>
+                            <p style='font-size:13px; color:#4A4870; margin-bottom:12px;'>{rec.get('등급이유','—')}</p>
                             <div class='profit-row'><span>기회</span><span class='profit-num'>{rec.get('기회','—')}</span></div>
-                            <div class='profit-row'><span>리스크</span><span class='profit-num' style='color:#F87171;'>{rec.get('리스크','—')}</span></div>
+                            <div class='profit-row'><span>리스크</span><span class='profit-num' style='color:#DC2626;'>{rec.get('리스크','—')}</span></div>
                         </div>
                         """, unsafe_allow_html=True)
 
@@ -827,7 +815,7 @@ elif "상권 분석" in app_mode:
                                 <div class='md-card'>
                                     <div class='md-card-header'>
                                         <div class='md-tag'>{['1순위','2순위','3순위'][i-1]}</div>
-                                        <div style='font-size:12px; color:#4ADE80;'>
+                                        <div style='font-size:12px; color:#16A34A;'>
                                             권장임대료 {fmt_num(m.get('권장임대료'))}만원
                                         </div>
                                     </div>
@@ -844,7 +832,7 @@ elif "상권 분석" in app_mode:
 # ═══════════════════════════════════════════════════════
 elif "수익성 계산기" in app_mode:
     st.markdown('<div class="section-title">분양가 수익성 시뮬레이터</div>', unsafe_allow_html=True)
-    st.markdown('<p style="font-size:13px; color:#4A4870; margin-bottom:1.5rem;">임대 조건을 입력하면 적정 분양가와 수익률을 즉시 계산합니다.</p>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size:13px; color:#9C98C8; margin-bottom:1.5rem;">임대 조건을 입력하면 적정 분양가와 수익률을 즉시 계산합니다.</p>', unsafe_allow_html=True)
 
     col_inp, col_out = st.columns([1, 1], gap="large")
 
@@ -903,19 +891,19 @@ elif "수익성 계산기" in app_mode:
         gauge_val = min(target_yield / 10, 1.0)
         gauge_color = "#4ADE80" if target_yield >= 4.5 else "#FBBF24" if target_yield >= 3.0 else "#F87171"
         st.markdown(f"""
-        <div style='background:#13131F; border:1px solid rgba(255,255,255,0.07); border-radius:14px;
+        <div style='background:#FFFFFF; border:1px solid #E8E5F0; border-radius:14px;
                     padding:20px; margin-top:12px; text-align:center;'>
-            <div style='font-size:11px; color:#3A3860; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:8px;'>
+            <div style='font-size:11px; color:#7C7A9A; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:8px;'>
                 목표 수익률
             </div>
             <div style='font-family:Syne,sans-serif; font-size:3rem; font-weight:800; color:{gauge_color};'>
                 {target_yield:.1f}%
             </div>
-            <div style='background:#1A1A2E; border-radius:6px; height:6px; margin-top:12px;'>
+            <div style='background:#F0EDF8; border-radius:6px; height:6px; margin-top:12px;'>
                 <div style='background:{gauge_color}; width:{int(gauge_val*100)}%; height:6px; border-radius:6px;
                             transition:width 0.4s ease;'></div>
             </div>
-            <div style='display:flex; justify-content:space-between; font-size:11px; color:#3A3860; margin-top:4px;'>
+            <div style='display:flex; justify-content:space-between; font-size:11px; color:#9C98C8; margin-top:4px;'>
                 <span>0%</span><span>목표 4.5%</span><span>10%</span>
             </div>
         </div>

@@ -22,35 +22,36 @@ st.set_page_config(
     page_title="KT Estate MD Optimizer",
     page_icon="◈",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="auto" # 화면 크기에 맞춰 사이드바 토글 자동 생성
 )
 
 # ─────────────────────────────────────────────
-# CSS (White Mode 전면 개편 & 사이드바 오류 수정)
+# CSS (White Mode 전면 개편 & 사이드바 안전 보장)
 # ─────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
-html, body, [class*="css"], .stApp {
+html, body, .stApp {
     font-family: 'DM Sans', sans-serif !important;
-    background-color: #F8F9FA !important; /* 깔끔한 연회색 배경 */
-    color: #1E293B !important; /* 진한 슬레이트 색상 */
+    background-color: #F8F9FA !important;
+    color: #1E293B !important;
 }
 
-/* Manage App 버튼 및 불필요 UI 숨김 (header는 사이드바 토글을 위해 남겨둠) */
-#MainMenu, footer,
-[data-testid="manage-app-button"],
-.viewerBadge_container__r5tak,
-.styles_viewerBadge__CvC9N,
-[data-testid="stToolbar"],
-[data-testid="stDecoration"] { display: none !important; visibility: hidden !important; }
+/* ★ 핵심: Streamlit 기본 헤더와 사이드바 토글을 절대 건드리지 않음 */
+#MainMenu, footer { display: none !important; }
 
-/* 사이드바 */
+/* 앱 상단 여백 정리 (헤더가 보이도록 공간 확보) */
+.main .block-container {
+    padding: 1rem 2.5rem 3rem !important;
+    max-width: 1400px !important;
+    margin-top: 2rem !important; 
+}
+
+/* 사이드바 디자인 */
 [data-testid="stSidebar"] {
     background: #FFFFFF !important;
     border-right: 1px solid #E2E8F0 !important;
-    min-width: 240px !important;
 }
 [data-testid="stSidebar"] * { color: #334155 !important; }
 [data-testid="stSidebar"] .stRadio > div { gap: 2px !important; }
@@ -67,13 +68,7 @@ html, body, [class*="css"], .stApp {
     background: #F1F5F9 !important;
 }
 
-/* 메인 */
-.main .block-container {
-    padding: 2rem 2.5rem 3rem !important;
-    max-width: 1400px !important;
-}
-
-/* 히어로 */
+/* 히어로 텍스트 */
 .hero-sub {
     font-size: 11px; font-weight: 600; color: #6366F1;
     letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;
@@ -90,12 +85,12 @@ html, body, [class*="css"], .stApp {
     padding: 4px 12px; border-radius: 100px; letter-spacing: 0.05em;
 }
 
-/* KPI */
+/* KPI 카드 */
 .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin: 1.4rem 0; }
 .kpi-card {
     background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px;
-    padding: 18px 20px; transition: border-color .2s, box-shadow .2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    transition: border-color .2s, box-shadow .2s;
 }
 .kpi-card:hover { border-color: #818CF8; box-shadow: 0 4px 20px rgba(99,102,241,.08); }
 .kpi-label { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #64748B; margin-bottom: 8px; }
@@ -104,22 +99,24 @@ html, body, [class*="css"], .stApp {
 .kpi-delta { font-size: 11px; margin-top: 7px; color: #16A34A; font-weight: 500; }
 .kpi-delta.neg { color: #DC2626; }
 
-/* 섹션 타이틀 */
+/* 섹션 타이틀 & 서브 */
 .section-title {
     font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 700;
     color: #0F172A; letter-spacing: 0; margin: 1.6rem 0 .7rem;
     display: flex; align-items: center; gap: 10px;
 }
 .section-title::after { content:''; flex:1; height:1px; background: #E2E8F0; }
-
-/* 페이지 서브텍스트 */
 .page-sub { font-size: 13px; color: #64748B; margin-bottom: 1.4rem; font-weight: 400; }
 
-/* 흰 카드 */
-.white-card { background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+/* 공통 카드 */
+.white-card, .profit-card, .md-card { 
+    background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; 
+    padding:20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); 
+}
+.md-card { padding:16px 18px; margin-bottom:8px; border-radius:12px; transition:all .2s; }
+.md-card:hover { border-color:#818CF8; box-shadow:0 4px 16px rgba(99,102,241,.08); }
 
-/* profit-card */
-.profit-card { background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+/* Profit 카드 디테일 */
 .profit-title { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#4F46E5; margin-bottom:14px; }
 .profit-row {
     display:flex; justify-content:space-between; align-items:center;
@@ -130,42 +127,29 @@ html, body, [class*="css"], .stApp {
 .profit-num { font-weight:600; color:#0F172A; font-family:'DM Sans',sans-serif; }
 .profit-highlight { color:#16A34A !important; font-size:14px !important; font-weight:700 !important; }
 
-/* MD 카드 */
-.md-card {
-    background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px;
-    padding:16px 18px; margin-bottom:8px; transition:all .2s; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-}
-.md-card:hover { border-color:#818CF8; box-shadow:0 4px 16px rgba(99,102,241,.08); }
+/* MD 카드 디테일 */
 .md-card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
 .md-tag {
     font-size:10px; font-weight:700; letter-spacing:.07em; padding:3px 10px;
-    border-radius:100px; background:#EEF2FF;
-    color:#4F46E5; border:1px solid #C7D2FE;
+    border-radius:100px; background:#EEF2FF; color:#4F46E5; border:1px solid #C7D2FE;
 }
 .md-name { font-size:14px; font-weight:700; color:#0F172A; margin-bottom:4px; }
 .md-solution { font-size:12px; color:#475569; line-height:1.65; border-top:1px solid #F1F5F9; padding-top:9px; margin-top:5px; }
 
 /* 입력 필드 */
-.stTextInput>div>div>input,
-.stTextArea>div>div>textarea,
-.stNumberInput>div>div>input {
+.stTextInput>div>div>input, .stTextArea>div>div>textarea, .stNumberInput>div>div>input {
     background:#FFFFFF !important; border:1.5px solid #CBD5E1 !important;
     border-radius:9px !important; color:#0F172A !important;
     font-family:'DM Sans',sans-serif !important; font-size:14px !important;
 }
-.stTextInput>div>div>input:focus,
-.stTextArea>div>div>textarea:focus,
-.stNumberInput>div>div>input:focus {
+.stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus, .stNumberInput>div>div>input:focus {
     border-color:#4F46E5 !important; box-shadow:0 0 0 3px rgba(79,70,229,.1) !important;
 }
-.stTextInput label,.stTextArea label,.stNumberInput label,.stSlider label,.stSelectbox label {
+.stTextInput label, .stTextArea label, .stNumberInput label, .stSlider label, .stSelectbox label {
     color:#475569 !important; font-size:11px !important; font-weight:700 !important;
-    letter-spacing:.08em !important; text-transform:uppercase !important;
-    font-family:'DM Sans',sans-serif !important;
+    letter-spacing:.08em !important; text-transform:uppercase !important; font-family:'DM Sans',sans-serif !important;
 }
-.stSelectbox [data-baseweb="select"]>div {
-    background:#FFFFFF !important; border-color:#CBD5E1 !important; border-radius:9px !important;
-}
+.stSelectbox [data-baseweb="select"]>div { background:#FFFFFF !important; border-color:#CBD5E1 !important; border-radius:9px !important; }
 .stSelectbox [data-baseweb="select"] span { color:#0F172A !important; }
 .stNumberInput button { background:#F8F9FA !important; border-color:#CBD5E1 !important; color:#0F172A !important; }
 
@@ -173,37 +157,26 @@ html, body, [class*="css"], .stApp {
 .stButton>button {
     background:linear-gradient(135deg,#6366F1 0%,#4F46E5 100%) !important;
     color:#FFFFFF !important; border:none !important; border-radius:9px !important;
-    font-family:'DM Sans',sans-serif !important; font-size:14px !important;
-    font-weight:600 !important; padding:10px 22px !important;
-    transition:all .18s !important; letter-spacing:.01em !important;
+    font-family:'DM Sans',sans-serif !important; font-size:14px !important; font-weight:600 !important; 
+    padding:10px 22px !important; transition:all .18s !important; letter-spacing:.01em !important;
 }
 .stButton>button:hover { transform:translateY(-1px) !important; box-shadow:0 8px 24px rgba(79,70,229,.3) !important; }
 
-/* 탭 */
+/* 기타 UI */
 .stTabs [data-baseweb="tab-list"] { background:transparent !important; border-bottom:1px solid #E2E8F0 !important; gap:0 !important; }
 .stTabs [data-baseweb="tab"] {
-    background:transparent !important; color:#64748B !important;
-    font-family:'DM Sans',sans-serif !important; font-size:13px !important;
-    font-weight:600 !important; padding:9px 18px !important; border-bottom:2px solid transparent !important;
+    background:transparent !important; color:#64748B !important; font-family:'DM Sans',sans-serif !important; 
+    font-size:13px !important; font-weight:600 !important; padding:9px 18px !important; border-bottom:2px solid transparent !important;
 }
 .stTabs [aria-selected="true"] { color:#4F46E5 !important; border-bottom-color:#4F46E5 !important; }
-
-/* 알림박스 */
 .stAlert { background:#F8FAFC !important; border:1px solid #E2E8F0 !important; border-radius:10px !important; color:#334155 !important; }
-
 hr { border-color:#E2E8F0 !important; }
 .stSpinner>div { border-top-color:#4F46E5 !important; }
 .stSlider>div>div>div { background:#4F46E5 !important; }
 
-/* 사이드바 tagline */
+/* 사이드바 커스텀 클래스 */
 .sidebar-tagline { font-family:'DM Sans',sans-serif; font-size:12px; font-weight:800; color:#0F172A; letter-spacing:.12em; text-transform:uppercase; }
-
-/* 사이드바 업종 통계 */
-.sector-row {
-    display:flex; justify-content:space-between; align-items:center;
-    padding:5px 0; border-bottom:1px solid #F1F5F9;
-    font-size:12px; font-family:'DM Sans',sans-serif; color:#475569;
-}
+.sector-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #F1F5F9; font-size:12px; font-family:'DM Sans',sans-serif; color:#475569; }
 .sector-row:last-child { border-bottom:none; }
 .sector-cnt { font-weight:700; color:#64748B; font-size:13px; }
 .sector-total { font-size:12px; font-weight:700; color:#4F46E5; padding-top:6px; border-top:1px solid #C7D2FE; margin-top:4px; font-family:'DM Sans',sans-serif; }
@@ -324,10 +297,11 @@ MD_RECOMMEND_PROMPT = """
 """
 
 # ─────────────────────────────────────────────
-# 유틸 함수
+# 유틸 함수 (따옴표 에러 수정 완료)
 # ─────────────────────────────────────────────
 def safe_json(text: str) -> dict:
-    text = re.sub(r'```json|```', '', text).strip()
+    text = re.sub(r'
+```json|```', '', text).strip()
     try:
         return json.loads(text)
     except Exception:

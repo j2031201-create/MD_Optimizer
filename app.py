@@ -423,6 +423,11 @@ elif "MD 추천" in app_mode:
     if sel_sec != "전체": df = df[df['AI분류업종'] == sel_sec]
     for col in ['월세_만원','보증금_만원','면적_평','권장분양가_만원','예상수익률_pct']:
         if col in df.columns: df[col] = pd.to_numeric(df[col], errors='coerce')
+# [NEW] 평당 임대료 파생 변수 생성 (이 줄이 반드시 차트 그리기 전에 들어가야 해!)
+    df['평당임대료_만원'] = df.apply(
+        lambda x: x['월세_만원'] / x['면적_평'] if pd.notna(x['면적_평']) and x['면적_평'] > 0 else 0, 
+        axis=1
+    )
 
     st.markdown(f'<p class="page-sub">{len(df)}건 조회</p>', unsafe_allow_html=True)
 
@@ -431,15 +436,20 @@ elif "MD 추천" in app_mode:
     with tab1:
         ca, cb = st.columns(2, gap="large")
         with ca:
-            df_b = df.dropna(subset=['AI분류업종','월세_만원'])
+            df_b = df[df['평당임대료_만원'] > 0].dropna(subset=['AI분류업종'])
             if not df_b.empty:
-                fig = px.box(df_b, x="AI분류업종", y="월세_만원", color="AI분류업종", title="업종별 월세 분포", color_discrete_sequence=PALETTE)
+                fig = px.box(df_b, x="AI분류업종", y="평당임대료_만원", color="AI분류업종", 
+                             title="업종별 평당 임대료 분포", color_discrete_sequence=PALETTE)
                 fig.update_layout(**CHART_LAYOUT, showlegend=False)
                 st.plotly_chart(fig, use_container_width=True)
         with cb:
-            df_s = df.dropna(subset=['면적_평','월세_만원'])
+            df_s = df[df['평당임대료_만원'] > 0].dropna(subset=['면적_평'])
             if not df_s.empty:
-                fig2 = px.scatter(df_s, x="면적_평", y="월세_만원", color="AI분류업종", title="면적 vs 월세", hover_data=['상호명'], color_discrete_sequence=PALETTE)
+                fig2 = px.scatter(df_s, x="면적_평", y="평당임대료_만원", color="AI분류업종", 
+                                  title="면적 vs 평당 임대료", hover_data=['상호명', '월세_만원'], color_discrete_sequence=PALETTE)
+                # 평균 평당가 기준선 추가
+                fig2.add_hline(y=df_s['평당임대료_만원'].mean(), line_dash="dot", line_color="#94A3B8", 
+                               annotation_text="평균 평당가", annotation_font_color="#64748B")
                 fig2.update_layout(**CHART_LAYOUT)
                 st.plotly_chart(fig2, use_container_width=True)
 

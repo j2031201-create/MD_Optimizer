@@ -3,6 +3,7 @@ import google.generativeai as genai
 import pandas as pd
 import json
 import re
+import requests
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
@@ -193,59 +194,31 @@ COLS = ['지역그룹','상호명','주소','AI분류업종','면적_평','보�
         '권장임대료_만원','권장분양가_만원','예상수익률_pct','수집일시']
 
 # ─────────────────────────────────────────────
-# 구글 시트 연동 로직
+# 구글 시트 연동 로직 (웹앱 URL 직통 터널)
 # ─────────────────────────────────────────────
-@st.cache_resource(ttl=300)
-def get_gsheet_ws():
-    if not GSPREAD_OK:
-        return None
-    try:
-        creds_info = dict(st.secrets.get("gcp_service_account", {}))
-        if not creds_info:
-            return None
-        scopes = ["https://spreadsheets.google.com/feeds",
-                  "https://www.googleapis.com/auth/drive"]
-        creds = Credentials.from_service_account_info(creds_info, scopes=scopes)
-        gc = gspread.authorize(creds)
-        ws = gc.open_by_key(SHEET_ID).sheet1
-        if ws.row_values(1) != SHEET_HEADERS:
-            ws.insert_row(SHEET_HEADERS, index=1)
-        return ws
-    except Exception:
-        return None
+# 방금 복사한 웹 앱 URL을 아래에 따옴표 안에 넣어!
+WEBHOOK_URL = "https://script.google.com/macros/s/여기에_복사한_URL_붙여넣기/exec"
 
 def append_to_gsheet(data: dict) -> bool:
-    ws = get_gsheet_ws()
-    if ws is None:
-        return False
     try:
-        row = [data.get(k,'') for k in [
+        # 시트 헤더 순서에 맞게 리스트 만들기
+        row = [data.get(k, '') for k in [
             '지역그룹','상호명','주소','AI분류업종','면적_평',
             '보증금_만원','월세_만원','총권리금_만원','수집일시','키워드','MD솔루션'
         ]]
-        ws.append_row(row, value_input_option='USER_ENTERED')
-        return True
-    except Exception:
+        
+        # URL로 데이터 쏘기
+        response = requests.post(WEBHOOK_URL, json=row)
+        
+        if response.status_code == 200:
+            return True
+        return False
+    except Exception as e:
+        st.error(f"시트 전송 실패: {e}")
         return False
 
-def load_from_gsheet() -> pd.DataFrame:
-    ws = get_gsheet_ws()
-    if ws is None:
-        return pd.DataFrame(columns=COLS)
-    try:
-        records = ws.get_all_records()
-        if not records:
-            return pd.DataFrame(columns=COLS)
-        df = pd.DataFrame(records).rename(columns={
-            "면적(평)":"면적_평","보증금":"보증금_만원","월세":"월세_만원",
-            "총권리금":"총권리금_만원","매물등록일":"수집일시"
-        })
-        for c in COLS:
-            if c not in df.columns:
-                df[c] = None
-        return df
-    except Exception:
-        return pd.DataFrame(columns=COLS)
+# 로컬 모드인지 체크하는 변수는 무조건 True로 강제 (웹훅 방식이므로 무조건 연결됨)
+gs_live = True
 
 # ─────────────────────────────────────────────
 # 세션 초기화

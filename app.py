@@ -2,18 +2,12 @@ import streamlit as st
 import google.generativeai as genai
 import pandas as pd
 import json
-import requests
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 
-# ── gspread (웹훅 방식 사용하므로 필수는 아니지만 유지) ──
-try:
-    import gspread
-    from google.oauth2.service_account import Credentials
-    GSPREAD_OK = True
-except ImportError:
-    GSPREAD_OK = False
+# ── [NEW] Supabase 라이브러리 ──
+from supabase import create_client, Client
 
 # ─────────────────────────────────────────────
 # 페이지 설정
@@ -32,47 +26,18 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
-html, body, .stApp {
-    font-family: 'DM Sans', sans-serif !important;
-    background-color: #F8F9FA !important;
-    color: #1E293B !important;
-}
-
+html, body, .stApp { font-family: 'DM Sans', sans-serif !important; background-color: #F8F9FA !important; color: #1E293B !important; }
 #MainMenu, footer { display: none !important; }
-
-.main .block-container {
-    padding: 1rem 2.5rem 3rem !important;
-    max-width: 1400px !important;
-    margin-top: 2rem !important; 
-}
-
-/* 사이드바 디자인 */
-[data-testid="stSidebar"] {
-    background: #FFFFFF !important;
-    border-right: 1px solid #E2E8F0 !important;
-}
+.main .block-container { padding: 1rem 2.5rem 3rem !important; max-width: 1400px !important; margin-top: 2rem !important; }
+[data-testid="stSidebar"] { background: #FFFFFF !important; border-right: 1px solid #E2E8F0 !important; }
 [data-testid="stSidebar"] * { color: #334155 !important; }
 [data-testid="stSidebar"] .stRadio > div { gap: 2px !important; }
-[data-testid="stSidebar"] .stRadio label {
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 14px !important;
-    font-weight: 500 !important;
-    color: #334155 !important;
-    padding: 9px 14px !important;
-    border-radius: 8px !important;
-    transition: background 0.15s !important;
-}
-[data-testid="stSidebar"] .stRadio label:hover {
-    background: #F1F5F9 !important;
-}
-
-/* 히어로 텍스트 */
+[data-testid="stSidebar"] .stRadio label { font-family: 'DM Sans', sans-serif !important; font-size: 14px !important; font-weight: 500 !important; color: #334155 !important; padding: 9px 14px !important; border-radius: 8px !important; transition: background 0.15s !important; }
+[data-testid="stSidebar"] .stRadio label:hover { background: #F1F5F9 !important; }
 .hero-sub { font-size: 11px; font-weight: 600; color: #6366F1; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px; }
 .hero-header { font-family: 'DM Sans', sans-serif; font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; color: #0F172A; margin-bottom: 0; }
 .hero-header .md-word { font-weight: 400; color: #4F46E5; }
 .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: #DCFCE7; border: 1px solid #BBF7D0; color: #16A34A; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 100px; letter-spacing: 0.05em; }
-
-/* KPI 카드 */
 .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin: 1.4rem 0; }
 .kpi-card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: border-color .2s, box-shadow .2s; }
 .kpi-card:hover { border-color: #818CF8; box-shadow: 0 4px 20px rgba(99,102,241,.08); }
@@ -81,38 +46,26 @@ html, body, .stApp {
 .kpi-unit  { font-size: 13px; color: #64748B; margin-left: 3px; font-weight: 400; }
 .kpi-delta { font-size: 11px; margin-top: 7px; color: #16A34A; font-weight: 500; }
 .kpi-delta.neg { color: #DC2626; }
-
-/* 섹션 타이틀 & 서브 */
 .section-title { font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 700; color: #0F172A; letter-spacing: 0; margin: 1.6rem 0 .7rem; display: flex; align-items: center; gap: 10px; }
 .section-title::after { content:''; flex:1; height:1px; background: #E2E8F0; }
 .page-sub { font-size: 13px; color: #64748B; margin-bottom: 1.4rem; font-weight: 400; }
-
-/* 공통 카드 */
 .white-card, .profit-card, .md-card { background:#FFFFFF; border:1px solid #E2E8F0; border-radius:14px; padding:20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
 .md-card { padding:16px 18px; margin-bottom:8px; border-radius:12px; transition:all .2s; }
 .md-card:hover { border-color:#818CF8; box-shadow:0 4px 16px rgba(99,102,241,.08); }
-
-/* Profit 카드 디테일 */
 .profit-title { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#4F46E5; margin-bottom:14px; }
 .profit-row { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid #F1F5F9; font-size:13px; color:#475569; font-weight:400; }
 .profit-row:last-child { border-bottom:none; }
 .profit-num { font-weight:600; color:#0F172A; font-family:'DM Sans',sans-serif; }
 .profit-highlight { color:#16A34A !important; font-size:14px !important; font-weight:700 !important; }
-
-/* MD 카드 디테일 */
 .md-card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
 .md-tag { font-size:10px; font-weight:700; letter-spacing:.07em; padding:3px 10px; border-radius:100px; background:#EEF2FF; color:#4F46E5; border:1px solid #C7D2FE; }
 .md-name { font-size:14px; font-weight:700; color:#0F172A; margin-bottom:4px; }
 .md-solution { font-size:12px; color:#475569; line-height:1.65; border-top:1px solid #F1F5F9; padding-top:9px; margin-top:5px; }
-
-/* 입력 필드 & 버튼 */
 .stTextInput>div>div>input, .stTextArea>div>div>textarea, .stNumberInput>div>div>input { background:#FFFFFF !important; border:1.5px solid #CBD5E1 !important; border-radius:9px !important; color:#0F172A !important; font-family:'DM Sans',sans-serif !important; font-size:14px !important; }
 .stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus, .stNumberInput>div>div>input:focus { border-color:#4F46E5 !important; box-shadow:0 0 0 3px rgba(79,70,229,.1) !important; }
 .stTextInput label, .stTextArea label, .stNumberInput label, .stSlider label, .stSelectbox label { color:#475569 !important; font-size:11px !important; font-weight:700 !important; letter-spacing:.08em !important; text-transform:uppercase !important; font-family:'DM Sans',sans-serif !important; }
 .stButton>button { background:linear-gradient(135deg,#6366F1 0%,#4F46E5 100%) !important; color:#FFFFFF !important; border:none !important; border-radius:9px !important; font-family:'DM Sans',sans-serif !important; font-size:14px !important; font-weight:600 !important; padding:10px 22px !important; transition:all .18s !important; letter-spacing:.01em !important; }
 .stButton>button:hover { transform:translateY(-1px) !important; box-shadow:0 8px 24px rgba(79,70,229,.3) !important; }
-
-/* 사이드바 커스텀 클래스 */
 .sidebar-tagline { font-family:'DM Sans',sans-serif; font-size:12px; font-weight:800; color:#0F172A; letter-spacing:.12em; text-transform:uppercase; }
 .sector-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #F1F5F9; font-size:12px; font-family:'DM Sans',sans-serif; color:#475569; }
 .sector-row:last-child { border-bottom:none; }
@@ -122,32 +75,40 @@ html, body, .stApp {
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# 상수 및 설정
+# Supabase 연동 로직
 # ─────────────────────────────────────────────
-# TODO: 웹 앱 배포 URL을 여기에 넣으세요
-WEBHOOK_URL = "https://script.google.com/macros/s/여기에_복사한_URL_붙여넣기/exec"
-
-COLS = ['지역그룹','상호명','주소','AI분류업종','면적_평','보증금_만원',
-        '월세_만원','총권리금_만원','키워드','MD솔루션',
-        '권장임대료_만원','권장분양가_만원','예상수익률_pct','수집일시']
-
-def append_to_gsheet(data: dict) -> bool:
+@st.cache_resource
+def init_supabase() -> Client:
     try:
-        row = [data.get(k, '') for k in [
-            '지역그룹','상호명','주소','AI분류업종','면적_평',
-            '보증금_만원','월세_만원','총권리금_만원','수집일시','키워드','MD솔루션'
-        ]]
-        response = requests.post(WEBHOOK_URL, json=row)
-        return response.status_code == 200
+        url = st.secrets["supabase"]["URL"]
+        key = st.secrets["supabase"]["KEY"]
+        return create_client(url, key)
     except Exception as e:
-        st.error(f"시트 전송 실패: {e}")
-        return False
+        st.error(f"Supabase 설정 오류 (secrets.toml 확인 필요): {e}")
+        return None
 
-gs_live = True
+supabase = init_supabase()
+sb_live = supabase is not None
+
+def insert_to_supabase(data: dict) -> bool:
+    if not sb_live:
+        return False
+    try:
+        # DB에 넣을 때 null 값이 에러를 내지 않도록 처리
+        clean_data = {k: v for k, v in data.items() if v is not None}
+        response = supabase.table('md_properties').insert(clean_data).execute()
+        return len(response.data) > 0 if hasattr(response, 'data') else False
+    except Exception as e:
+        st.error(f"Supabase DB 저장 실패: {e}")
+        return False
 
 # ─────────────────────────────────────────────
 # 세션 & API 설정
 # ─────────────────────────────────────────────
+COLS = ['지역그룹','상호명','주소','AI분류업종','면적_평','보증금_만원',
+        '월세_만원','총권리금_만원','키워드','MD솔루션',
+        '권장임대료_만원','권장분양가_만원','예상수익률_pct','수집일시']
+
 if 'md_data' not in st.session_state:
     st.session_state.md_data = pd.DataFrame(columns=COLS)
 if 'last_extracted' not in st.session_state:
@@ -192,7 +153,7 @@ MD_RECOMMEND_PROMPT = """
 """
 
 # ─────────────────────────────────────────────
-# 핵심 유틸 함수 (수익률 로직 강화)
+# 핵심 유틸 함수
 # ─────────────────────────────────────────────
 def safe_json(text: str) -> dict:
     text = text.replace("```json", "").replace("```", "").strip()
@@ -210,16 +171,12 @@ def fmt(v, sfx=""):
         return str(v)
 
 def calc_profit(rent, deposit, price):
-    """보증금을 차감한 실투자금 기준으로 수익률을 계산하는 확정 함수"""
     if not rent or not price:
         return {"수익률": 0.0, "회수기간": 0.0}
-    
     annual = rent * 12
-    invest = price - deposit # 실투자금
-    
+    invest = price - deposit
     if invest <= 0:
         return {"수익률": 0.0, "회수기간": 0.0}
-        
     return {
         "수익률": round((annual / invest) * 100, 2),
         "회수기간": round(invest / annual, 1) if annual else 0
@@ -275,8 +232,8 @@ with st.sidebar:
             st.markdown(f"<div style='margin-top:4px;'>{rows}</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    dot_c   = "#16A34A" if gs_live else "#DC2626"
-    dot_t   = "시트 연결됨" if gs_live else "로컬 모드"
+    dot_c   = "#16A34A" if sb_live else "#DC2626"
+    dot_t   = "Supabase 연결됨" if sb_live else "DB 연결 실패"
     st.markdown(f"<div style='display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#475569;font-family:DM Sans,sans-serif;'><span style='width:8px;height:8px;border-radius:50%;background:{dot_c};display:inline-block;'></span>{dot_t}</div>", unsafe_allow_html=True)
 
 
@@ -289,7 +246,7 @@ with c_h1:
     st.markdown('<div class="hero-header">상업시설 <span class="md-word">MD</span> 최적화 플랫폼</div>', unsafe_allow_html=True)
 with c_h2:
     st.markdown("<br><br>", unsafe_allow_html=True)
-    badge_txt = "🟢 구글시트 연동" if gs_live else "⚪ 로컬 모드"
+    badge_txt = "🟢 Supabase 연동" if sb_live else "🔴 DB 연결 안됨"
     st.markdown(f'<div class="hero-badge">{badge_txt}</div>', unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -303,7 +260,7 @@ if not df_all.empty:
     def _mean_yield(col):
         if col in df_all.columns:
             s = pd.to_numeric(df_all[col], errors='coerce').dropna()
-            s = s[s > 0] # 수익률 0% 제거
+            s = s[s > 0]
             return s.mean() if not s.empty else 0
         return 0
 
@@ -389,7 +346,7 @@ if "데이터 수집" in app_mode:
                 """, unsafe_allow_html=True)
 
         if btn_extract and raw_text.strip():
-            result_ph.markdown(loading_html("AI 분석 중...", "텍스트를 구조화하고 수익성을 계산합니다"), unsafe_allow_html=True)
+            result_ph.markdown(loading_html("AI 분석 중...", "텍스트를 구조화하고 DB에 저장합니다"), unsafe_allow_html=True)
             try:
                 resp = model.generate_content(EXTRACTION_PROMPT.format(region=input_region, text=raw_text[:3000]))
                 data = safe_json(resp.text)
@@ -398,12 +355,10 @@ if "데이터 수집" in app_mode:
                     data['지역그룹'] = input_region
                     data['수집일시'] = datetime.now().strftime("%Y-%m-%d %H:%M")
                     
-                    # LLM 계산치 덮어쓰기 (Python 하드코딩 검증)
                     r = pd.to_numeric(data.get('월세_만원'), errors='coerce') or 0
                     d = pd.to_numeric(data.get('보증금_만원'), errors='coerce') or 0
                     p = pd.to_numeric(data.get('권장분양가_만원'), errors='coerce') or 0
                     
-                    # 분양가가 없으면 타겟 4.5% 기준 역산
                     if p <= 0 and r > 0:
                         p = int((r * 12) / 0.045) + d
                         data['권장분양가_만원'] = p
@@ -418,8 +373,9 @@ if "데이터 수집" in app_mode:
                     st.session_state.md_data = pd.concat([st.session_state.md_data, pd.DataFrame([data])], ignore_index=True)
                     st.session_state.last_extracted = data
                     
-                    saved = append_to_gsheet(data)
-                    msg = "구글 시트 저장 완료 ✓" if saved else "로컬 저장됨 (시트 미연결)"
+                    # Supabase에 데이터 쏘기
+                    saved = insert_to_supabase(data)
+                    msg = "Supabase DB 저장 완료 ✓" if saved else "DB 전송 실패 (로컬 세션에만 저장됨)"
                     st.success(f"✓ '{data.get('상호명','매물')}' 분석 완료 — {msg}")
                     st.rerun()
                 else:
@@ -552,7 +508,7 @@ elif "MD 추천" in app_mode:
 
 
 # ═══════════════════════════════════════════════════════
-# 모드 C: 수익성 계산기 (역산 로직 강화)
+# 모드 C: 수익성 계산기
 # ═══════════════════════════════════════════════════════
 elif "수익성 계산기" in app_mode:
     st.markdown('<div class="section-title">분양가 수익성 시뮬레이터</div>', unsafe_allow_html=True)
@@ -569,7 +525,6 @@ elif "수익성 계산기" in app_mode:
 
     with co:
         annual   = monthly_rent * 12
-        # 실투자금 기준 역산 공식: 분양가 = (연임대료 / 수익률) + 보증금
         rec_p    = int((annual / (target_yield / 100)) + deposit) if target_yield > 0 else 0
         rent_pp  = monthly_rent / area if area > 0 else 0
         

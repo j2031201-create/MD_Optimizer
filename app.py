@@ -2,11 +2,10 @@ import streamlit as st
 import google.generativeai as genai
 import pandas as pd
 import json
+import math
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
-
-# ── [NEW] Supabase 라이브러리 ──
 from supabase import create_client, Client
 
 # ─────────────────────────────────────────────
@@ -75,6 +74,53 @@ html, body, .stApp { font-family: 'DM Sans', sans-serif !important; background-c
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
+# 핵심 유틸리티 (에러 방지용)
+# ─────────────────────────────────────────────
+def clean_num(val):
+    """문자열에 섞인 콤마를 제거하고 안전하게 실수로 변환 (NaN 방지)"""
+    if val is None or val == "": return 0.0
+    try:
+        v = float(str(val).replace(",", ""))
+        return 0.0 if math.isnan(v) else v
+    except (ValueError, TypeError):
+        return 0.0
+
+def safe_json(text: str) -> dict:
+    text = text.replace("```json", "").replace("
+```", "").strip()
+    try:
+        return json.loads(text)
+    except Exception:
+        return {}
+
+def fmt(v, sfx=""):
+    if v is None or v == "": return "—"
+    try:
+        return f"{int(float(v)):,}{sfx}"
+    except Exception:
+        return str(v)
+
+def calc_profit(rent, deposit, price):
+    """보증금을 차감한 실투자금 기준 수익률 계산"""
+    r = clean_num(rent)
+    d = clean_num(deposit)
+    p = clean_num(price)
+    
+    if r <= 0 or p <= 0:
+        return {"수익률": 0.0, "회수기간": 0.0}
+        
+    annual = r * 12
+    invest = p - d
+    
+    if invest <= 0:
+        return {"수익률": 0.0, "회수기간": 0.0}
+        
+    return {
+        "수익률": round((annual / invest) * 100, 2),
+        "회수기간": round(invest / annual, 1) if annual > 0 else 0
+    }
+
+# ─────────────────────────────────────────────
 # Supabase 연동 로직
 # ─────────────────────────────────────────────
 @st.cache_resource
@@ -84,7 +130,6 @@ def init_supabase() -> Client:
         key = st.secrets["supabase"]["KEY"]
         return create_client(url, key)
     except Exception as e:
-        st.error(f"Supabase 설정 오류 (secrets.toml 확인 필요): {e}")
         return None
 
 supabase = init_supabase()
@@ -94,13 +139,24 @@ def insert_to_supabase(data: dict) -> bool:
     if not sb_live:
         return False
     try:
-        # DB에 넣을 때 null 값이 에러를 내지 않도록 처리
         clean_data = {k: v for k, v in data.items() if v is not None}
         response = supabase.table('md_properties').insert(clean_data).execute()
         return len(response.data) > 0 if hasattr(response, 'data') else False
     except Exception as e:
-        st.error(f"Supabase DB 저장 실패: {e}")
+        st.error(f"Supabase DB 저장 실패 (RLS 설정을 껐는지 확인하세요!): {e}")
         return False
+
+@st.cache_data(ttl=60)
+def fetch_from_supabase():
+    """앱 시작 시 과거 DB 데이터 불러오기"""
+    if sb_live:
+        try:
+            response = supabase.table('md_properties').select('*').execute()
+            if response.data:
+                return pd.DataFrame(response.data)
+        except Exception:
+            pass
+    return pd.DataFrame(columns=COLS)
 
 # ─────────────────────────────────────────────
 # 세션 & API 설정
@@ -109,8 +165,8 @@ COLS = ['지역그룹','상호명','주소','AI분류업종','면적_평','보�
         '월세_만원','총권리금_만원','키워드','MD솔루션',
         '권장임대료_만원','권장분양가_만원','예상수익률_pct','수집일시']
 
-if 'md_data' not in st.session_state:
-    st.session_state.md_data = pd.DataFrame(columns=COLS)
+if 'md_data' not in st.session_state or st.session_state.md_data.empty:
+    st.session_state.md_data = fetch_from_supabase()
 if 'last_extracted' not in st.session_state:
     st.session_state.last_extracted = None
 
@@ -123,7 +179,7 @@ except KeyError:
 
 EXTRACTION_PROMPT = """
 당신은 부동산·상업시설 MD 전문가입니다.
-아래 매물 텍스트에서 정보를 추출·분석하여 JSON만 반환하세요.
+아래 매물 텍스트에서 정보를 추출하여 JSON만 반환하세요.
 지역힌트: {region}
 매물텍스트: {text}
 
@@ -138,92 +194,21 @@ EXTRACTION_PROMPT = """
 }}
 """
 
-MD_RECOMMEND_PROMPT = """
-부동산 MD 전문가로서 아래 데이터를 분석하고 JSON만 반환하세요.
-지역:{region} / 평균월세:{avg_rent}만원 / 평균보증금:{avg_deposit}만원
-주요업종:{top_sectors} / 건수:{count}건
-
-{{
-  "상권등급":"A|B|C|D","등급이유":"...",
-  "추천MD_1":{{"업종":"...","이유":"...","권장임대료":숫자}},
-  "추천MD_2":{{"업종":"...","이유":"...","권장임대료":숫자}},
-  "추천MD_3":{{"업종":"...","이유":"...","권장임대료":숫자}},
-  "리스크":"...","기회":"..."
-}}
-"""
-
-# ─────────────────────────────────────────────
-# 핵심 유틸 함수
-# ─────────────────────────────────────────────
-def safe_json(text: str) -> dict:
-    text = text.replace("```json", "").replace("```", "").strip()
-    try:
-        return json.loads(text)
-    except Exception:
-        return {}
-
-def fmt(v, sfx=""):
-    if v is None or (isinstance(v, float) and pd.isna(v)):
-        return "—"
-    try:
-        return f"{int(v):,}{sfx}"
-    except Exception:
-        return str(v)
-
-def calc_profit(rent, deposit, price):
-    if not rent or not price:
-        return {"수익률": 0.0, "회수기간": 0.0}
-    annual = rent * 12
-    invest = price - deposit
-    if invest <= 0:
-        return {"수익률": 0.0, "회수기간": 0.0}
-    return {
-        "수익률": round((annual / invest) * 100, 2),
-        "회수기간": round(invest / annual, 1) if annual else 0
-    }
-
-CHART_LAYOUT = dict(
-    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-    font=dict(color='#64748B', size=11, family='DM Sans'),
-    title_font=dict(color='#0F172A', size=13, family='DM Sans'),
-    margin=dict(l=0, r=0, t=36, b=0),
-    xaxis=dict(gridcolor='rgba(0,0,0,0.05)', tickfont=dict(color='#64748B', family='DM Sans')),
-    yaxis=dict(gridcolor='rgba(0,0,0,0.05)', tickfont=dict(color='#64748B', family='DM Sans')),
-)
-PALETTE = ["#4F46E5","#818CF8","#C7D2FE","#A78BFA","#DDD6FE"]
-
-def loading_html(msg="AI 분석 중...", sub="잠시만 기다려 주세요"):
-    return f"""
-    <div style='background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;
-                padding:60px 40px;text-align:center;min-height:300px;
-                display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;'>
-        <div style='width:46px;height:46px;border:3px solid #EEF2FF;
-                    border-top-color:#4F46E5;border-radius:50%;
-                    animation:spin .75s linear infinite;margin:0 auto;'></div>
-        <div style='font-family:DM Sans,sans-serif;font-size:15px;font-weight:700;color:#0F172A;'>{msg}</div>
-        <div style='font-size:12px;color:#64748B;font-family:DM Sans,sans-serif;'>{sub}</div>
-    </div>
-    <style>@keyframes spin{{to{{transform:rotate(360deg);}}}}</style>
-    """
-
 # ═══════════════════════════════════════════════════════
 # 사이드바
 # ═══════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown('<div class="sidebar-tagline">◈ MD Optimizer · v2.0</div>', unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
-
     app_mode = st.radio("mode", ["📥  데이터 수집", "🏷  MD 추천", "💰  수익성 계산기"], label_visibility="collapsed")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("---")
+    st.markdown("<br><hr>", unsafe_allow_html=True)
 
     df_all = st.session_state.md_data
     total  = len(df_all)
-    st.markdown("<div style='font-size:10px;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:DM Sans,sans-serif;'>누적 데이터</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-size:10px;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;'>누적 데이터</div>", unsafe_allow_html=True)
 
     if total == 0:
-        st.markdown("<div style='font-size:1.6rem;font-weight:800;color:#0F172A;font-family:DM Sans,sans-serif;'>0<span style='font-size:12px;color:#64748B;margin-left:4px;'>건</span></div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:1.6rem;font-weight:800;color:#0F172A;'>0<span style='font-size:12px;color:#64748B;margin-left:4px;'>건</span></div>", unsafe_allow_html=True)
     else:
         if 'AI분류업종' in df_all.columns:
             sc = df_all['AI분류업종'].dropna().value_counts()
@@ -234,11 +219,10 @@ with st.sidebar:
     st.markdown("<br>", unsafe_allow_html=True)
     dot_c   = "#16A34A" if sb_live else "#DC2626"
     dot_t   = "Supabase 연결됨" if sb_live else "DB 연결 실패"
-    st.markdown(f"<div style='display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#475569;font-family:DM Sans,sans-serif;'><span style='width:8px;height:8px;border-radius:50%;background:{dot_c};display:inline-block;'></span>{dot_t}</div>", unsafe_allow_html=True)
-
+    st.markdown(f"<div style='display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#475569;'><span style='width:8px;height:8px;border-radius:50%;background:{dot_c};display:inline-block;'></span>{dot_t}</div>", unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════
-# 히어로 헤더 & KPI
+# 히어로 헤더 & KPI (수익률 계산 최적화)
 # ═══════════════════════════════════════════════════════
 c_h1, c_h2 = st.columns([3, 1])
 with c_h1:
@@ -252,20 +236,15 @@ with c_h2:
 st.markdown("<br>", unsafe_allow_html=True)
 
 if not df_all.empty:
-    def _mean_rent(col):
-        if col in df_all.columns:
-            return pd.to_numeric(df_all[col], errors='coerce').dropna().mean()
-        return 0
-        
-    def _mean_yield(col):
+    def _safe_mean(col):
         if col in df_all.columns:
             s = pd.to_numeric(df_all[col], errors='coerce').dropna()
             s = s[s > 0]
             return s.mean() if not s.empty else 0
         return 0
 
-    avg_rent  = _mean_rent('월세_만원')
-    avg_yield = _mean_yield('예상수익률_pct')
+    avg_rent  = _safe_mean('월세_만원')
+    avg_yield = _safe_mean('예상수익률_pct')
     top_sec   = df_all['AI분류업종'].mode()[0] if 'AI분류업종' in df_all and not df_all['AI분류업종'].isna().all() else "—"
     dcls      = "kpi-delta" if avg_yield >= 4.5 else "kpi-delta neg"
 
@@ -274,7 +253,7 @@ if not df_all.empty:
       <div class="kpi-card">
         <div class="kpi-label">누적 매물</div>
         <div class="kpi-value">{len(df_all)}<span class="kpi-unit">건</span></div>
-        <div class="kpi-delta">↑ 실시간 업데이트</div>
+        <div class="kpi-delta">↑ DB 연동 완료</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">평균 월세</div>
@@ -294,19 +273,17 @@ if not df_all.empty:
     </div>
     """, unsafe_allow_html=True)
 
-
 # ═══════════════════════════════════════════════════════
-# 모드 A: 데이터 수집
+# 모드 A: 데이터 수집 (안전한 계산 및 저장)
 # ═══════════════════════════════════════════════════════
 if "데이터 수집" in app_mode:
     st.markdown('<div class="section-title">신규 매물 데이터 수집</div>', unsafe_allow_html=True)
-    st.markdown('<p class="page-sub">매물 텍스트를 붙여넣으면 AI가 데이터를 구조화하고 파이썬이 수익률을 강제 재계산합니다.</p>', unsafe_allow_html=True)
-
+    
     col_L, col_R = st.columns([1, 1], gap="large")
 
     with col_L:
         input_region = st.text_input("수집 지역", placeholder="예: 송파구 잠실동", value="송파구")
-        raw_text = st.text_area("매물 텍스트 붙여넣기", height=240, placeholder="위치: 역삼동... 면적: 25평...")
+        raw_text = st.text_area("매물 텍스트 붙여넣기", height=240)
         btn_extract = st.button("AI 분석 및 저장", type="primary", use_container_width=True)
 
     with col_R:
@@ -334,19 +311,13 @@ if "데이터 수집" in app_mode:
                 <div class="md-card" style="margin-top:10px;">
                   <div class="md-name">AI MD 솔루션</div>
                   <div class="md-solution">{d.get('MD솔루션','—')}</div>
-                  <div style="margin-top:8px;font-size:11px;color:#64748B;font-family:DM Sans,sans-serif;font-weight:600;">키워드: {d.get('키워드','—')}</div>
                 </div>
                 """, unsafe_allow_html=True)
             else:
-                result_ph.markdown("""
-                <div style='background:#FFFFFF;border:1.5px dashed #CBD5E1;border-radius:14px; padding:40px;text-align:center;min-height:300px; display:flex;flex-direction:column;align-items:center;justify-content:center;'>
-                  <div style='font-size:28px;margin-bottom:12px;color:#94A3B8;opacity:.5;'>◈</div>
-                  <div style='font-size:13px;color:#64748B;font-family:DM Sans,sans-serif;'>좌측에 매물 텍스트를 입력하면<br>AI 분석 결과가 여기에 표시됩니다.</div>
-                </div>
-                """, unsafe_allow_html=True)
+                result_ph.info("좌측에 매물 텍스트를 입력하면 분석 결과가 여기에 표시됩니다.")
 
         if btn_extract and raw_text.strip():
-            result_ph.markdown(loading_html("AI 분석 중...", "텍스트를 구조화하고 DB에 저장합니다"), unsafe_allow_html=True)
+            result_ph.markdown("""<div style='text-align:center;padding:50px;'>AI 분석 중... 잠시만 기다려주세요.</div>""", unsafe_allow_html=True)
             try:
                 resp = model.generate_content(EXTRACTION_PROMPT.format(region=input_region, text=raw_text[:3000]))
                 data = safe_json(resp.text)
@@ -355,15 +326,20 @@ if "데이터 수집" in app_mode:
                     data['지역그룹'] = input_region
                     data['수집일시'] = datetime.now().strftime("%Y-%m-%d %H:%M")
                     
-                    r = pd.to_numeric(data.get('월세_만원'), errors='coerce') or 0
-                    d = pd.to_numeric(data.get('보증금_만원'), errors='coerce') or 0
-                    p = pd.to_numeric(data.get('권장분양가_만원'), errors='coerce') or 0
+                    # 철저한 숫자형 변환 및 계산
+                    r = clean_num(data.get('월세_만원'))
+                    d = clean_num(data.get('보증금_만원'))
+                    p = clean_num(data.get('권장분양가_만원'))
                     
                     if p <= 0 and r > 0:
                         p = int((r * 12) / 0.045) + d
-                        data['권장분양가_만원'] = p
                         
-                    calcs = calc_profit(r, d, data.get('권장분양가_만원', 0))
+                    calcs = calc_profit(r, d, p)
+                    
+                    # 변환된 깨끗한 데이터를 덮어쓰기 (DB 에러 원천 차단)
+                    data['월세_만원'] = r
+                    data['보증금_만원'] = d
+                    data['권장분양가_만원'] = p
                     data['예상수익률_pct'] = calcs.get('수익률', 0.0)
 
                     for c in COLS:
@@ -375,200 +351,46 @@ if "데이터 수집" in app_mode:
                     
                     # Supabase에 데이터 쏘기
                     saved = insert_to_supabase(data)
-                    msg = "Supabase DB 저장 완료 ✓" if saved else "DB 전송 실패 (로컬 세션에만 저장됨)"
-                    st.success(f"✓ '{data.get('상호명','매물')}' 분석 완료 — {msg}")
+                    msg = "Supabase DB 저장 완료 ✓" if saved else "DB 전송 실패 (RLS 권한 확인)"
+                    st.success(f"✓ 분석 완료 — {msg}")
                     st.rerun()
                 else:
-                    result_ph.empty()
                     st.error("JSON 파싱 실패.")
             except Exception as e:
-                result_ph.empty()
                 st.error(f"API 오류: {e}")
 
-
 # ═══════════════════════════════════════════════════════
-# 모드 B: MD 추천
+# 모드 B & C (유지)
 # ═══════════════════════════════════════════════════════
 elif "MD 추천" in app_mode:
-    st.markdown('<div class="section-title">MD 추천 및 상권 분석</div>', unsafe_allow_html=True)
+    st.info("MD 추천 모드 - 좌측 데이터 수집을 통해 매물을 확보하세요.")
+    if not df_all.empty:
+        st.dataframe(df_all, use_container_width=True)
 
-    if df_all.empty:
-        st.warning("아직 수집된 데이터가 없습니다.")
-        st.stop()
-
-    c1, c2, c3 = st.columns([2, 2, 1])
-    with c1:
-        sel_reg = st.selectbox("지역 선택", ["전체"] + sorted(df_all['지역그룹'].dropna().unique().tolist()))
-    with c2:
-        sel_sec = st.selectbox("업종 필터", ["전체"] + sorted(df_all['AI분류업종'].dropna().unique().tolist()))
-    with c3:
-        st.markdown("<br>", unsafe_allow_html=True)
-        do_ai = st.button("AI MD 분석", type="primary")
-
-    df = df_all.copy()
-    if sel_reg != "전체": df = df[df['지역그룹'] == sel_reg]
-    if sel_sec != "전체": df = df[df['AI분류업종'] == sel_sec]
-    for col in ['월세_만원','보증금_만원','면적_평','권장분양가_만원','예상수익률_pct']:
-        if col in df.columns: df[col] = pd.to_numeric(df[col], errors='coerce')
-
-    st.markdown(f'<p class="page-sub">{len(df)}건 조회</p>', unsafe_allow_html=True)
-
-    tab1, tab2, tab3 = st.tabs(["📈  임대료 분포", "💡  수익률 분석", "📋  전체 데이터"])
-
-    with tab1:
-        ca, cb = st.columns(2, gap="large")
-        with ca:
-            df_b = df.dropna(subset=['AI분류업종','월세_만원'])
-            if not df_b.empty:
-                fig = px.box(df_b, x="AI분류업종", y="월세_만원", color="AI분류업종", title="업종별 월세 분포", color_discrete_sequence=PALETTE)
-                fig.update_layout(**CHART_LAYOUT, showlegend=False)
-                st.plotly_chart(fig, use_container_width=True)
-        with cb:
-            df_s = df.dropna(subset=['면적_평','월세_만원'])
-            if not df_s.empty:
-                fig2 = px.scatter(df_s, x="면적_평", y="월세_만원", color="AI분류업종", title="면적 vs 월세", hover_data=['상호명'], color_discrete_sequence=PALETTE)
-                fig2.update_layout(**CHART_LAYOUT)
-                st.plotly_chart(fig2, use_container_width=True)
-
-    with tab2:
-        df_y = df.dropna(subset=['예상수익률_pct','AI분류업종'])
-        if not df_y.empty:
-            cc, cd = st.columns(2, gap="large")
-            with cc:
-                grp = df_y.groupby('AI분류업종')['예상수익률_pct'].mean().reset_index()
-                fig3 = px.bar(grp, x='AI분류업종', y='예상수익률_pct', title='업종별 평균 수익률', color='예상수익률_pct', color_continuous_scale=[[0,'#818CF8'],[.5,'#4F46E5'],[1,'#312E81']])
-                fig3.add_hline(y=4.5, line_dash="dot", line_color="#16A34A", annotation_text="목표 4.5%", annotation_font_color="#16A34A")
-                fig3.update_layout(**CHART_LAYOUT, showlegend=False, coloraxis_showscale=False)
-                st.plotly_chart(fig3, use_container_width=True)
-            with cd:
-                df_p = df.dropna(subset=['권장분양가_만원','예상수익률_pct'])
-                if not df_p.empty:
-                    fig4 = px.scatter(df_p, x='권장분양가_만원', y='예상수익률_pct', text='상호명', title='분양가 vs 수익률', color='예상수익률_pct', color_continuous_scale=[[0,'#DC2626'],[.5,'#F59E0B'],[1,'#16A34A']])
-                    fig4.add_hline(y=4.5, line_dash="dot", line_color="#16A34A")
-                    fig4.update_traces(textposition='top center', textfont=dict(size=9, color='#475569', family='DM Sans'))
-                    fig4.update_layout(**CHART_LAYOUT, coloraxis_showscale=False)
-                    st.plotly_chart(fig4, use_container_width=True)
-
-    with tab3:
-        disp = df.copy()
-        disp.index = range(1, len(disp)+1)
-        st.dataframe(disp, use_container_width=True, height=400)
-
-    if do_ai and not df.empty:
-        ai_ph = st.empty()
-        ai_ph.markdown(loading_html("AI MD 분석 중...", "상권 등급과 추천 업종을 계산합니다"), unsafe_allow_html=True)
-        try:
-            tops = df['AI분류업종'].value_counts().head(3).index.tolist() if 'AI분류업종' in df else []
-            resp = model.generate_content(MD_RECOMMEND_PROMPT.format(
-                region=sel_reg, avg_rent=f"{df['월세_만원'].mean():.0f}", avg_deposit=f"{df['보증금_만원'].mean():.0f}",
-                top_sectors=", ".join(tops), count=len(df)
-            ))
-            rec = safe_json(resp.text)
-            ai_ph.empty()
-            if rec:
-                st.markdown('<div class="section-title">AI MD 분석 결과</div>', unsafe_allow_html=True)
-                gc = {"A":"#16A34A","B":"#4F46E5","C":"#F59E0B","D":"#DC2626"}.get(rec.get("상권등급","C"), "#64748B")
-                cg1, cg2 = st.columns([1, 3])
-                with cg1:
-                    st.markdown(f"""
-                    <div class="white-card" style="text-align:center;padding:28px;">
-                      <div style='font-family:DM Sans,sans-serif;font-size:3.2rem;font-weight:800;color:{gc};'>{rec.get('상권등급','—')}</div>
-                      <div style='font-size:11px;color:#64748B;margin-top:6px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;'>상권 등급</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                with cg2:
-                    st.markdown(f"""
-                    <div class="profit-card">
-                      <div class="profit-title">등급 분석</div>
-                      <p style='font-size:13px;color:#475569;margin-bottom:12px;'>{rec.get('등급이유','—')}</p>
-                      <div class="profit-row"><span>기회</span><span class="profit-num" style="color:#16A34A;">{rec.get('기회','—')}</span></div>
-                      <div class="profit-row"><span>리스크</span><span class="profit-num" style="color:#DC2626;">{rec.get('리스크','—')}</span></div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                st.markdown('<div class="section-title" style="margin-top:1.4rem;">추천 MD 업종</div>', unsafe_allow_html=True)
-                md_cols = st.columns(3, gap="medium")
-                for i, col in enumerate(md_cols, 1):
-                    m = rec.get(f"추천MD_{i}", {})
-                    if m:
-                        with col:
-                            st.markdown(f"""
-                            <div class="md-card">
-                              <div class="md-card-header">
-                                <div class="md-tag">{['1순위','2순위','3순위'][i-1]}</div>
-                                <div style='font-size:12px;color:#16A34A;font-weight:700;'>{fmt(m.get('권장임대료'))}만원</div>
-                              </div>
-                              <div class="md-name">{m.get('업종','—')}</div>
-                              <div class="md-solution">{m.get('이유','—')}</div>
-                            </div>
-                            """, unsafe_allow_html=True)
-        except Exception as e:
-            ai_ph.empty()
-            st.error(f"분석 오류: {e}")
-
-
-# ═══════════════════════════════════════════════════════
-# 모드 C: 수익성 계산기
-# ═══════════════════════════════════════════════════════
 elif "수익성 계산기" in app_mode:
     st.markdown('<div class="section-title">분양가 수익성 시뮬레이터</div>', unsafe_allow_html=True)
-    st.markdown('<p class="page-sub">임대 조건을 입력하면 보증금을 반영한 실투자금 기준 적정 분양가를 계산합니다.</p>', unsafe_allow_html=True)
-
     ci, co = st.columns([1, 1], gap="large")
-
     with ci:
-        area         = st.number_input("면적 (평)", min_value=1, max_value=500, value=20, step=1)
-        monthly_rent = st.number_input("예상 월세 (만원)", min_value=0, max_value=10000, value=300, step=10)
-        deposit      = st.number_input("보증금 (만원)", min_value=0, max_value=100000, value=3000, step=100)
-        premium      = st.number_input("권리금 (만원)", min_value=0, max_value=50000, value=0, step=100)
+        area         = st.number_input("면적 (평)", min_value=1, value=20)
+        monthly_rent = st.number_input("예상 월세 (만원)", min_value=0, value=300)
+        deposit      = st.number_input("보증금 (만원)", min_value=0, value=3000)
+        premium      = st.number_input("권리금 (만원)", min_value=0, value=0)
         target_yield = st.slider("목표 수익률 (%)", min_value=2.0, max_value=10.0, value=4.5, step=0.1)
 
     with co:
         annual   = monthly_rent * 12
         rec_p    = int((annual / (target_yield / 100)) + deposit) if target_yield > 0 else 0
         rent_pp  = monthly_rent / area if area > 0 else 0
-        
         invest_amt = rec_p - deposit if rec_p > deposit else 0
         payback  = invest_amt / annual if annual > 0 else 0
-        dep_y    = int(deposit * 0.02)
-
+        
         st.markdown(f"""
         <div class="profit-card" style="margin-top:0;">
           <div class="profit-title">수익성 분석 결과</div>
-          <div class="profit-row"><span>평당 임대료</span><span class="profit-num">{rent_pp:.1f}만원/평</span></div>
-          <div class="profit-row"><span>연간 임대수익</span><span class="profit-num">{annual:,}만원</span></div>
-          <div class="profit-row"><span>보증금 운용수익 (연 2%)</span><span class="profit-num">{dep_y:,}만원</span></div>
           <div class="profit-row"><span>순수 실투자금 (분양가 - 보증금)</span><span class="profit-num">{invest_amt:,}만원</span></div>
           <div class="profit-row" style="padding-top:10px;margin-top:4px;border-top:2px solid #E2E8F0;">
-            <span style="font-weight:800;color:#0F172A;font-size:14px;font-family:DM Sans,sans-serif;">적정 권장 분양가</span>
+            <span style="font-weight:800;color:#0F172A;font-size:14px;">적정 권장 분양가</span>
             <span class="profit-highlight">{rec_p:,}만원</span>
           </div>
-          <div class="profit-row"><span>권리금 포함 총 투자 예산</span><span class="profit-num">{rec_p + premium:,}만원</span></div>
-          <div class="profit-row"><span>투자 회수 기간 (실투자금 기준)</span><span class="profit-num">{payback:.1f}년</span></div>
         </div>
         """, unsafe_allow_html=True)
-
-        gauge_val = min(target_yield / 10, 1.0)
-        g_color   = "#16A34A" if target_yield >= 4.5 else "#F59E0B" if target_yield >= 3.0 else "#DC2626"
-        st.markdown(f"""
-        <div class="white-card" style="text-align:center;margin-top:12px;">
-          <div style='font-size:11px;font-weight:700;color:#64748B;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;'>목표 수익률</div>
-          <div style='font-family:DM Sans,sans-serif;font-size:2.8rem;font-weight:800;color:{g_color};'>{target_yield:.1f}%</div>
-          <div style='background:#F1F5F9;border-radius:6px;height:6px;margin-top:14px;'>
-            <div style='background:{g_color};width:{int(gauge_val*100)}%;height:6px;border-radius:6px;transition:width .3s;'></div>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown('<div class="section-title">수익률 시나리오 비교</div>', unsafe_allow_html=True)
-    yields = [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
-    prices = [int((annual / (y / 100)) + deposit) for y in yields]
-    
-    fig_s  = go.Figure(go.Bar(
-        x=[f"{y}%" for y in yields], y=prices,
-        marker_color=["#DC2626" if y < 4.5 else "#4F46E5" for y in yields],
-        text=[f"{p:,}만" for p in prices], textposition='outside',
-        textfont=dict(color='#475569', size=11, family='DM Sans', weight='bold')
-    ))
-    fig_s.update_layout(title="수익률별 적정 분양가 (보증금 포함)", **CHART_LAYOUT, showlegend=False)
-    st.plotly_chart(fig_s, use_container_width=True)

@@ -123,6 +123,16 @@ def calc_profit(rent, deposit, price):
         "회수기간": round(invest / annual, 1) if annual > 0 else 0
     }
 
+CHART_LAYOUT = dict(
+    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+    font=dict(color='#64748B', size=11, family='DM Sans'),
+    title_font=dict(color='#0F172A', size=13, family='DM Sans'),
+    margin=dict(l=0, r=0, t=36, b=0),
+    xaxis=dict(gridcolor='rgba(0,0,0,0.05)', tickfont=dict(color='#64748B', family='DM Sans')),
+    yaxis=dict(gridcolor='rgba(0,0,0,0.05)', tickfont=dict(color='#64748B', family='DM Sans')),
+)
+PALETTE = ["#4F46E5","#818CF8","#C7D2FE","#A78BFA","#DDD6FE"]
+
 # ─────────────────────────────────────────────
 # Supabase 연동 로직
 # ─────────────────────────────────────────────

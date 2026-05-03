@@ -86,8 +86,10 @@ def clean_num(val):
         return 0.0
 
 def safe_json(text: str) -> dict:
-    text = text.replace("```json", "").replace("
-```", "").strip()
+    text = text.replace("
+```json", "")
+    text = text.replace("```", "")
+    text = text.strip()
     try:
         return json.loads(text)
     except Exception:

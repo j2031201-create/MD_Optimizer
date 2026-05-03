@@ -360,9 +360,19 @@ if "데이터 수집" in app_mode:
                     d = clean_num(data.get('보증금_만원'))
                     p = clean_num(data.get('권장분양가_만원'))
                     
-                    # 권장 분양가가 없으면 타겟 4.5% 수익률로 역산
+                # 권장 분양가가 없으면 업종별 타겟 수익률(Cap Rate)로 역산
                     if p <= 0 and r > 0:
-                        p = int((r * 12) / 0.045) + d
+                        sector = data.get('AI분류업종', '')
+                        if '의료' in sector or '교육' in sector:
+                            cap_rate = 0.040  # 우량 업종은 4.0%로 계산 (가치 높음)
+                        elif 'F&B' in sector:
+                            cap_rate = 0.052  # F&B는 리스크 반영 5.2%
+                        elif '패션' in sector or '뷰티' in sector:
+                            cap_rate = 0.048  # 리테일 4.8%
+                        else:
+                            cap_rate = 0.045  # 기본 4.5%
+                            
+                        p = int((r * 12) / cap_rate) + d
                         
                     calcs = calc_profit(r, d, p)
                     

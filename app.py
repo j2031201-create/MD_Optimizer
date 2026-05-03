@@ -224,7 +224,8 @@ gs_live = True
 # 세션 초기화
 # ─────────────────────────────────────────────
 if 'md_data' not in st.session_state:
-    st.session_state.md_data = load_from_gsheet()
+    # webhook 방식에서는 초기 로딩을 sheet_data 대신 빈 프레임으로 임시 설정 (필요시 gspread로 로딩)
+    st.session_state.md_data = pd.DataFrame(columns=COLS)
 if 'last_extracted' not in st.session_state:
     st.session_state.last_extracted = None
 
@@ -349,7 +350,6 @@ with st.sidebar:
             st.markdown(f"<div style='margin-top:4px;'>{rows}</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    gs_live = get_gsheet_ws() is not None
     dot_c   = "#16A34A" if gs_live else "#DC2626"
     dot_t   = "시트 연결됨" if gs_live else "로컬 모드"
     st.markdown(f"<div style='display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#475569;font-family:DM Sans,sans-serif;'><span style='width:8px;height:8px;border-radius:50%;background:{dot_c};display:inline-block;'></span>{dot_t}</div>", unsafe_allow_html=True)
